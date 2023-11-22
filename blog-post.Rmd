@@ -1,0 +1,45 @@
+---
+title: "Exploratory Analysis"
+output: html_document
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r, echo=FALSE}
+# import libraries
+library(tidyverse)
+library(gridExtra)
+library(here)
+library(janitor)
+library(lubridate)
+```
+
+```{r, echo=FALSE}
+# import goose data
+goose_1998_2014 <- read_csv("data/goose_parasites_1998_2014/goose_bloodParasites_YKD_reed_1998_2014.csv")
+
+goose_parasites_2006_2016 <- read_csv('data/goose_parasites_2006_2016/emperorGoose_bloodParasites_YKD_buchheit_2006_2016.csv')
+
+# import climate data
+precip_raw <- read_csv('data/acrc_climate_data/acrc_annual_precip.csv', skip = 5)
+temp_raw <- read_csv('data/acrc_climate_data/acrc_annual_temp.csv', skip = 5)
+```
+
+## Data Cleaning
+
+Tidying the climate data was much more straightforward, as much of the work had been done as the data was loaded.
+
+```{r}
+# clean names
+precip_raw <- precip_raw %>% clean_names()
+temp_raw <- temp_raw %>% clean_names()
+
+# join data by year 
+clim_data <- inner_join(precip_raw, temp_raw)
+
+# tidy joined data
+
+
+```
