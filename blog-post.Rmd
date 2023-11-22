@@ -29,17 +29,28 @@ temp_raw <- read_csv('data/acrc_climate_data/acrc_annual_temp.csv', skip = 5)
 
 ## Data Cleaning
 
-Tidying the climate data was much more straightforward, as much of the work had been done as the data was loaded.
+### Tidying Climate Data
+
+In order to explore temperature and precipitation changes over time, I kept a dataset that had more year data then what was needed for the study (1998-2016).
 
 ```{r}
 # clean names
-precip_raw <- precip_raw %>% clean_names()
-temp_raw <- temp_raw %>% clean_names()
+  # rename(new_name = old_name)
+precip_raw <- precip_raw %>% clean_names() %>% 
+  rename(annual_precip_in = annual_total_precipitation_in)
 
-# join data by year 
-clim_data <- inner_join(precip_raw, temp_raw)
+temp_raw <- temp_raw %>% clean_names() %>% 
+  rename(max_annual_temp = annual_maximum_temperature_deg_f,
+         min_annual_temp = annual_minimum_temperature_deg_f,
+         max_temp_date = annual_maximum_temperature_date,
+         min_temp_date = annual_minimum_temperature_date,
+         avg_annual_temp = annual_average_temperature_deg_f)
+
+# join data by year column
+clim_data_full <- inner_join(precip_raw, temp_raw)
 
 # tidy joined data
-
-
+clim_data <- clim_data_full %>% 
+  mutate(year = as.numeric(clim_data_full$year)) %>% 
+  filter(year>=1998 & year <= 2016)
 ```

@@ -355,16 +355,31 @@ display: none;
 
 <div id="data-cleaning" class="section level2">
 <h2>Data Cleaning</h2>
-<p>Tidying the climate data was much more straightforward, as much of
-the work had been done as the data was loaded.</p>
+<div id="tidying-climate-data" class="section level3">
+<h3>Tidying Climate Data</h3>
+<p>In order to explore temperature and precipitation changes over time,
+I kept a dataset that had more year data then what was needed for the
+study (1998-2016).</p>
 <pre class="r"><code># clean names
-precip_raw &lt;- precip_raw %&gt;% clean_names()
-temp_raw &lt;- temp_raw %&gt;% clean_names()
+  # rename(new_name = old_name)
+precip_raw &lt;- precip_raw %&gt;% clean_names() %&gt;% 
+  rename(annual_precip_in = annual_total_precipitation_in)
 
-# join data by year 
-clim_data &lt;- inner_join(precip_raw, temp_raw)
+temp_raw &lt;- temp_raw %&gt;% clean_names() %&gt;% 
+  rename(max_annual_temp = annual_maximum_temperature_deg_f,
+         min_annual_temp = annual_minimum_temperature_deg_f,
+         max_temp_date = annual_maximum_temperature_date,
+         min_temp_date = annual_minimum_temperature_date,
+         avg_annual_temp = annual_average_temperature_deg_f)
 
-# tidy joined data</code></pre>
+# join data by year column
+clim_data_full &lt;- inner_join(precip_raw, temp_raw)
+
+# tidy joined data
+clim_data &lt;- clim_data_full %&gt;% 
+  mutate(year = as.numeric(clim_data_full$year)) %&gt;% 
+  filter(year&gt;=1998 &amp; year &lt;= 2016)</code></pre>
+</div>
 </div>
 
 
