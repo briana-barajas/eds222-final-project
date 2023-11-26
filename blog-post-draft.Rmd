@@ -20,7 +20,7 @@ library(lubridate)
 # import goose data
 goose_1998_2014 <- read_csv("data/goose_parasites_1998_2014/goose_bloodParasites_YKD_reed_1998_2014.csv")
 
-goose_parasites_2006_2016 <- read_csv('data/goose_parasites_2006_2016/emperorGoose_bloodParasites_YKD_buchheit_2006_2016.csv')
+goose_2006_2016 <- read_csv('data/goose_parasites_2006_2016/emperorGoose_bloodParasites_YKD_buchheit_2006_2016.csv')
 
 # import climate data
 precip_raw <- read_csv('data/acrc_climate_data/acrc_annual_precip.csv', skip = 5)
@@ -53,4 +53,14 @@ clim_data_full <- inner_join(precip_raw, temp_raw)
 clim_data <- clim_data_full %>% 
   mutate(year = as.numeric(clim_data_full$year)) %>% 
   filter(year>=1998 & year <= 2016)
+```
+
+### Goose Data
+
+I am primarily interested in prevalence of infection, so I am removing the additional gene bank columns. I also want to create two new parasite columns. One will indicate n/9, where n is the number of parasites (out of 9) that were present in the sample. We'll refer to this as parasite load. Additionally, I want to use these numeric values to create a true/false column indicating parasite presence. There are two seperate datasets, one spanning 1998-2014 and another from 2006-2016. I will join these data sets to create a continuous df spanning from 1998-2016.
+
+```{r}
+# clean all names
+goose_1998_2014 <- goose_1998_2014 %>% clean_names()
+goose_2006_2016 <- goose_2006_2016 %>% clean_names()
 ```
