@@ -378,7 +378,7 @@ clim_data_full &lt;- inner_join(precip_raw, temp_raw)
 # tidy joined data
 clim_data &lt;- clim_data_full %&gt;% 
   mutate(year = as.numeric(clim_data_full$year)) %&gt;% 
-  filter(year&gt;=1998 &amp; year &lt;= 2016)</code></pre>
+  filter(year&gt;=2006 &amp; year &lt;= 2016)</code></pre>
 </div>
 <div id="goose-data" class="section level3">
 <h3>Goose Data</h3>
@@ -387,13 +387,19 @@ removing the additional gene bank columns. I also want to create two new
 parasite columns. One will indicate n/9, where n is the number of
 parasites (out of 9) that were present in the sample. We’ll refer to
 this as parasite load. Additionally, I want to use these numeric values
-to create a true/false column indicating parasite presence. There are
-two seperate datasets, one spanning 1998-2014 and another from
-2006-2016. I will join these data sets to create a continuous df
-spanning from 1998-2016.</p>
+to create a true/false column indicating parasite presence. The data
+spans from 2006 to 2016.</p>
 <pre class="r"><code># clean all names
-goose_1998_2014 &lt;- goose_1998_2014 %&gt;% clean_names()
-goose_2006_2016 &lt;- goose_2006_2016 %&gt;% clean_names()</code></pre>
+goose_2006_2016 &lt;- goose_2006_2016 %&gt;% clean_names() %&gt;% 
+  select(-contains(&#39;bank&#39;)) %&gt;% 
+  mutate(total_parasite = rowSums(goose_2006_2016[ , c(8,16)], na.rm = TRUE))</code></pre>
+<pre class="r"><code>goose_2006_2016 &lt;- goose_2006_2016 %&gt;% 
+  clean_names() %&gt;% #clean names
+  select(-contains(&#39;bank&#39;)) %&gt;% #remove gene data cols
+  mutate(total_parasite = rowSums(goose_2006_2016[ , c(8,16)],na.rm = TRUE),
+         infection = cut(goose_2006_2016$total_parasite,
+                      breaks = c(-1,0,2),
+                      labels = c(&#39;FALSE&#39;, &#39;TRUE&#39;))) #create t/f infection col</code></pre>
 </div>
 </div>
 
