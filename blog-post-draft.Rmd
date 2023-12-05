@@ -71,5 +71,21 @@ goose_2006_2016 <- goose_2006_2016 %>%
   mutate(total_parasite = rowSums(goose_2006_2016[ , c(8,16)],na.rm = TRUE),
          infection = cut(goose_2006_2016$total_parasite,
                       breaks = c(-1,0,2),
-                      labels = c('FALSE', 'TRUE'))) #create t/f infection col
+                      labels = c('FALSE', 'TRUE')))#create t/f infection col
+
+# test <- goose_2006_2016 %>%
+#   mutate(year = as.Date(year, format = '%Y'),
+#          year - ymd(year, truncated = 2L))
+```
+
+## Data Exploration
+
+I wanted to do some data exploration before I completely decided what join and statistical testing would be best.
+
+Bar chart, infection per year
+
+```{r}
+ggplot(goose_2006_2016, aes(x=year,
+                 y=total_parasite)) +
+  geom_col()
 ```
