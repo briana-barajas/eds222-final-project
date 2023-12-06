@@ -1,0 +1,66 @@
+---
+title: 'Tree Growth Draft'
+output: html_document
+---
+
+```{r,include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+ 
+Load Libraries
+```{r, include=FALSE}
+# data processing
+library(tidyverse)
+library(here)
+library(janitor)
+library(lubridate)
+
+# plotting/aesthetics
+library(gridExtra)
+library(gt)
+
+# time series packages
+library(feasts)
+library(tsibble)
+```
+
+Read in Data
+```{r}
+# load tree data
+dbh_raw <- read_csv(here('data/long.data.DBH.csv'))
+initial_dbn <- read_csv(here('data/203-LFDPDendrometerData-Transposed.csv'))
+
+# load climate data
+clim_data_raw <- read_csv(here('data/EVFSTowerMetDaily_2023v2.csv'))
+```
+
+## Data Cleaning
+
+### Tree Growth Data
+Dates are originally in Julian day and year, so these need to be converted to a `date` columm with the proper data type. Additionally, I checked for the most common species & created a subset of this tree type to potentially limit ommited variables bias.
+
+```{r}
+# clean data
+dbh <- dbh_raw %>%
+  mutate(date = as.Date(paste(year, doy, sep="-"),"%Y-%j")) %>% 
+  rename(dbh_mm = dbh)
+
+# check number of entries per species
+plyr::count(dbh$species)
+
+# create subset of most common species
+torchwoods <- dbh %>% filter(species == 'DACEXC')
+```
+
+### Climate Data
+Climate data ranges from 2000-2022 and needs to be limited to the time period where data on trees was collected. There is more meteorological data than needed, so I selected key columns of interest. I might relate rain to growth, and then add `ppfd_millimoles_m2` as a potential omitted variable. This is "photosynthetic photon flux density" which is a measure of photosynthetically active photons (400-700nm) hitting a surface per unit area per unit time. In my own words, this is a measure of the presence of photons that can be utilized for photosynthesis, since not all wavelengths are used by plants.
+
+```{r}
+clim_data <- clim_data_raw %>% 
+  clean_names() %>% 
+  filter(year > 2011 & year <= 2016) %>% #select drought years
+  select(c('date', 'year', 'rain_mm', 'tempmax_degreescelsius', 'ppfd_millimoles_m2')) %>% 
+  rename('max_temp_c' = 'tempmax_degreescelsius')
+  
+```
+

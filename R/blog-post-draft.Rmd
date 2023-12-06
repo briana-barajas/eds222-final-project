@@ -170,6 +170,8 @@ I wanted to do some data exploration before I completely decided what join and s
 
 3.  Time series of infection over time - running into errors with `tsibble()` object type. For the homework, we used a `tsibble()` object before running the decomposition. I am able to coerce the `df` to a populated `tbl_df`, but when I run the decomposition it returns a blank item.
 
+    **NOTE:** I realized since the data is only annual, I won't be able to uncover seasonality
+
     ```{r}
     # # decomp rain
     # a <- tsibble::as_tsibble(clim_data_full, index='date')
