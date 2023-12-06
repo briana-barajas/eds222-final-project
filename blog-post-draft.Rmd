@@ -14,6 +14,7 @@ library(gridExtra)
 library(here)
 library(janitor)
 library(lubridate)
+library(gt)
 ```
 
 ```{r, echo=FALSE}
@@ -45,7 +46,8 @@ temp_raw <- temp_raw %>% clean_names() %>%
          avg_annual_temp = annual_average_temperature_deg_f)
 
 # join data by year column
-clim_data_full <- inner_join(precip_raw, temp_raw)
+clim_data_full <- inner_join(precip_raw, temp_raw) %>% 
+  mutate(date = ymd(paste0(year, '01', '01')))
 
 # tidy joined data
 clim_data <- clim_data_full %>% 
@@ -71,21 +73,91 @@ goose_2006_2016 <- goose_2006_2016 %>%
   mutate(total_parasite = rowSums(goose_2006_2016[ , c(8,16)],na.rm = TRUE),
          infection = cut(goose_2006_2016$total_parasite,
                       breaks = c(-1,0,2),
-                      labels = c('FALSE', 'TRUE')))#create t/f infection col
+                      labels = c('FALSE', 'TRUE')), # t/f infection column
+         date = ymd(paste0(year, '01', '01'))) #date-time object
 
-# test <- goose_2006_2016 %>%
-#   mutate(year = as.Date(year, format = '%Y'),
-#          year - ymd(year, truncated = 2L))
 ```
 
 ## Data Exploration
 
 I wanted to do some data exploration before I completely decided what join and statistical testing would be best.
 
-Bar chart, infection per year
+1.  Bar charts for variables of interest
+
+    ```{r}
+    # plot annual parasites found
+    parasite_bar <- ggplot(goose_2006_2016, aes(x=date,
+                     y=total_parasite)) +
+      geom_col(fill='indianred3') +
+      labs(y='Total Parasites Detected',
+           x='Year') +
+      theme_minimal()
+
+    # plot annual precipitation
+    precip_bar <- ggplot(clim_data, aes(x=date, y=annual_precip_in)) +
+      geom_col(fill='lightskyblue2') +
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5)) +
+      labs(x= 'Year',
+           y = 'Annual Precipitation (in)')
+
+    # plot annual average temperature
+    temp_bar <- ggplot(clim_data, aes(x=date, y=avg_annual_temp)) +
+      geom_col(fill='palegreen3') +
+      theme_minimal() +
+      labs(x='Year',
+           y='Average Annual Temperature (F)')
+
+    grid.arrange(parasite_bar, precip_bar, temp_bar, ncol = 2)
+    ```
+
+2.  View how climate has changed over time, linearly. I kept a full data frame from 1923-2022 as well as one with the years specific to the parasite study. I am hoping that the larger sample size from the full climate data will demonstrate changes over time, even if the 10-year span of the study does not
+
+    a\. Summarise data over all years, and years of interest
+
+    ```{r}
+    # summary table of full climate data
+    clim_data_full %>% 
+      summarise(mean_precip = mean(annual_precip_in, na.rm = TRUE),
+                sd_precip = sd(annual_precip_in, na.rm = TRUE),
+                mean_annual_temp = mean(avg_annual_temp, na.rm = TRUE),
+                sd_annual_temp = sd(avg_annual_temp, na.rm = TRUE)) %>% 
+      gt() %>% tab_header('Climate Data Summary 1923-2022')
+
+    # summary of study climate data
+    clim_data %>% 
+      summarise(mean_precip = mean(annual_precip_in, na.rm = TRUE),
+                sd_precip = sd(annual_precip_in, na.rm = TRUE),
+                mean_annual_temp = mean(avg_annual_temp, na.rm = TRUE),
+                sd_annual_temp = sd(avg_annual_temp, na.rm = TRUE)) %>% 
+      gt() %>% tab_header('Climate Data Summary 2006-2016')
+
+    ```
+
+    b\. Use full climate data to see how climate variables have changed over time
+
+    ```{r, warning=FALSE, message=FALSE}
+    # plot precipitation over time
+    precip_scatter <- ggplot(clim_data_full, aes(x=date, y=annual_precip_in)) +
+      geom_point() +
+      geom_smooth() +
+      labs(x='', y='Avg Precipitation (in)') +
+      theme_minimal()
+
+    # plot average annual temp over time
+    temp_scatter <- ggplot(clim_data_full, aes(x=date, y=avg_annual_temp)) +
+      geom_point()+
+      geom_smooth() +
+        labs(x='Year', y='Avg Annual Temp (F)') +
+      theme_minimal()
+
+    grid.arrange(precip_scatter, temp_scatter, ncol=1)
+    ```
+
+3.  Next exploratory step
+
+Plot climate data as a time series
 
 ```{r}
-ggplot(goose_2006_2016, aes(x=year,
-                 y=total_parasite)) +
-  geom_col()
+# ggplot(clim_data, aes(x=))
 ```
