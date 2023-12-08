@@ -94,70 +94,170 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>The data collected spans the years 2012-2016 and measures tree diameter at breast height. During this time, there was a drought. My statistical analysis will evaluate 4 of the most commonly sampled tree species (maybe families) to see which fared better during the drought. I have added climate data to test for potential omitted variables bias. After creating the linear model, I’ll conduct a time series analysis to view the seasonality and trends in growth. Since the drought was over this entire period of time, it’s possible there will be a slow in growth for all species as the drought continues.</p>
 <p>Load Libraries</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># data processing</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># plotting/aesthetics</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># time series packages</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(feasts)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tsibble)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <p>Read in Data</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load tree data</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>dbh_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">'data/long.data.DBH.csv'</span>))</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>initial_dbn <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">'data/203-LFDPDendrometerData-Transposed.csv'</span>))</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># load climate data</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>clim_data_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">'data/EVFSTowerMetDaily_2023v2.csv'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load tree data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dbh_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">'data/long.data.DBH.csv'</span>))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>initial_dbn <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">'data/203-LFDPDendrometerData-Transposed.csv'</span>))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># load climate data</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>clim_data_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">'data/EVFSTowerMetDaily_2023v2.csv'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
 <section id="data-cleaning" class="level2">
 <h2 class="anchored" data-anchor-id="data-cleaning">Data Cleaning</h2>
 <section id="tree-growth-data" class="level3">
 <h3 class="anchored" data-anchor-id="tree-growth-data">Tree Growth Data</h3>
 <p>Dates are originally in Julian day and year, so these need to be converted to a <code>date</code> columm with the proper data type. Additionally, I checked for the most common species &amp; created a subset of this tree type to potentially limit ommited variables bias.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># clean data</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dbh <span class="ot">&lt;-</span> dbh_raw <span class="sc">%&gt;%</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date =</span> <span class="fu">as.Date</span>(<span class="fu">paste</span>(year, doy, <span class="at">sep=</span><span class="st">"-"</span>),<span class="st">"%Y-%j"</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">dbh_mm =</span> dbh)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># check number of entries per species</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>plyr<span class="sc">::</span><span class="fu">count</span>(dbh<span class="sc">$</span>species)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>        x freq
-1  ALCFLO  108
-2  ALCLAT  162
-3  ANDINE   54
-4  CALCAL  108
-5  CASARB  594
-6  CASSYL   54
-7  CORSUL   54
-8  CROPOE   54
-9  CYAARB   54
-10 DACEXC 1134
-11 DENARB   54
-12 DRYGLA   54
-13 EUGDOM   54
-14 GUAGUI  324
-15 GUEVAL   54
-16 GUTCAR  162
-17 HOMRAC   54
-18 INGLAU  432
-19 MANBID  648
-20 MATDOM  216
-21 MELHER  108
-22 MIRCHR   54
-23 SAPLAU  108
-24 SLOBER  378
-25 TABHET  108</code></pre>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add family data to df</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>dbh_raw <span class="ot">&lt;-</span> dbh_raw <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">family =</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">case_when</span>(species <span class="sc">==</span> <span class="st">'ALCFLO'</span> <span class="sc">~</span> <span class="st">'Euphorbiaceae'</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'ALCLAT'</span> <span class="sc">~</span> <span class="st">'Euphorbiaceae'</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'ANDINE'</span> <span class="sc">~</span> <span class="st">'Fabaceae-papilionoideae'</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'CALCAL'</span> <span class="sc">~</span> <span class="st">'Clusiaceae'</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'CASARB'</span> <span class="sc">~</span> <span class="st">'Salicaceae'</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'CASSYL'</span> <span class="sc">~</span> <span class="st">'Salicaceae'</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'CORSUL'</span> <span class="sc">~</span> <span class="st">'Boraginaceae'</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'CROPOE'</span> <span class="sc">~</span> <span class="st">'Euphorbiaceae'</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'CYAARB'</span> <span class="sc">~</span> <span class="cn">NA</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'DACEXC'</span> <span class="sc">~</span> <span class="st">'Burseraceae'</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'DENARB'</span> <span class="sc">~</span> <span class="st">'Araliaceae'</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'DRYGLA'</span> <span class="sc">~</span> <span class="st">'Putranjivaceae'</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'EUGDOM'</span> <span class="sc">~</span> <span class="st">'Myrtaceae'</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'GUAGUI'</span> <span class="sc">~</span> <span class="st">'Meliaceae'</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'GUEVAL'</span> <span class="sc">~</span> <span class="st">'Rubiaceae'</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'GUTCAR'</span> <span class="sc">~</span> <span class="st">'Annonaceae'</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'HOMRAC'</span> <span class="sc">~</span> <span class="st">'Salicaceae'</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'INGLAU'</span> <span class="sc">~</span> <span class="st">'Fabaceae-mimosoideae'</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'MANBID'</span> <span class="sc">~</span> <span class="st">'Sapotaceae'</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'MATDOM'</span> <span class="sc">~</span> <span class="st">'Sapindaceae'</span>,</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'MELHER'</span> <span class="sc">~</span> <span class="st">'Sabiaceae'</span>,</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'MIRCHR'</span> <span class="sc">~</span> <span class="st">'Sapotaceae'</span>,</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'SAPLAU'</span> <span class="sc">~</span> <span class="st">'Euphorbiaceae'</span>,</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'SLOBER'</span> <span class="sc">~</span> <span class="st">'Elaeocarpaceae'</span>,</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>                               species <span class="sc">==</span> <span class="st">'TABHET'</span> <span class="sc">~</span> <span class="st">'Bignoniaceae'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create subset of most common species</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>torchwoods <span class="ot">&lt;-</span> dbh <span class="sc">%&gt;%</span> <span class="fu">filter</span>(species <span class="sc">==</span> <span class="st">'DACEXC'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># view the number of entries per species</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>family_count <span class="ot">&lt;-</span> plyr<span class="sc">::</span><span class="fu">count</span>(dbh_raw<span class="sc">$</span>family)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># clean data</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>dbh <span class="ot">&lt;-</span> dbh_raw <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date =</span> <span class="fu">as.Date</span>(<span class="fu">paste</span>(year, doy, <span class="at">sep=</span><span class="st">"-"</span>),<span class="st">"%Y-%j"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">dbh_mm =</span> dbh) <span class="sc">%&gt;%</span> <span class="co">#add units to diameter col</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Burseraceae'</span> <span class="sc">|</span> family <span class="sc">==</span> <span class="st">'Salicaceae'</span> <span class="sc">|</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>           family <span class="sc">==</span> <span class="st">'Sapotaceae'</span> <span class="sc">|</span> family <span class="sc">==</span> <span class="st">'Euphorbiaceae'</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>(<span class="fu">c</span>(<span class="st">'doy'</span>, <span class="st">'year'</span>, <span class="st">'flag'</span>)))<span class="co">#families w/most data</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># date frame that includes daily mean diameter</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>mean_dbh <span class="ot">&lt;-</span> dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(date,family) <span class="sc">%&gt;%</span> <span class="co">#group by date and family</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">mean_daily_dbh =</span> <span class="fu">mean</span>(dbh_mm, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="co">#calculate mean</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co"># asses NAs in each column</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(dbh))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     tag  species       gx       gy transect   dbh_mm   family     date 
+       0        0        0        0        0      208        0        0 </code></pre>
+</div>
 </div>
 </section>
 <section id="climate-data" class="level3">
 <h3 class="anchored" data-anchor-id="climate-data">Climate Data</h3>
 <p>Climate data ranges from 2000-2022 and needs to be limited to the time period where data on trees was collected. There is more meteorological data than needed, so I selected key columns of interest. I might relate rain to growth, and then add <code>ppfd_millimoles_m2</code> as a potential omitted variable. This is “photosynthetic photon flux density” which is a measure of photosynthetically active photons (400-700nm) hitting a surface per unit area per unit time. In my own words, this is a measure of the presence of photons that can be utilized for photosynthesis, since not all wavelengths are used by plants.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>clim_data <span class="ot">&lt;-</span> clim_data_raw <span class="sc">%&gt;%</span> </span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clean_names</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">&gt;</span> <span class="dv">2011</span> <span class="sc">&amp;</span> year <span class="sc">&lt;=</span> <span class="dv">2016</span>) <span class="sc">%&gt;%</span> <span class="co">#select drought years</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">c</span>(<span class="st">'date'</span>, <span class="st">'year'</span>, <span class="st">'rain_mm'</span>, <span class="st">'tempmax_degreescelsius'</span>, <span class="st">'ppfd_millimoles_m2'</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">'max_temp_c'</span> <span class="ot">=</span> <span class="st">'tempmax_degreescelsius'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># clean data</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>clim_data <span class="ot">&lt;-</span> clim_data_raw <span class="sc">%&gt;%</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clean_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">&gt;</span> <span class="dv">2011</span> <span class="sc">&amp;</span> year <span class="sc">&lt;=</span> <span class="dv">2016</span>) <span class="sc">%&gt;%</span> <span class="co">#select drought years</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">c</span>(<span class="st">'date'</span>, <span class="st">'year'</span>, <span class="st">'rain_mm'</span>, <span class="st">'tempmax_degreescelsius'</span>, <span class="st">'ppfd_millimoles_m2'</span>)) <span class="sc">%&gt;%</span>  <span class="co">#select columns of interest for glm</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">'max_temp_c'</span> <span class="ot">=</span> <span class="st">'tempmax_degreescelsius'</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># asses number of NAs for each variable</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(clim_data))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              date               year            rain_mm         max_temp_c 
+              1112                  0                147                285 
+ppfd_millimoles_m2 
+               211 </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="data-exploration" class="level2">
+<h2 class="anchored" data-anchor-id="data-exploration">Data Exploration</h2>
+<section id="tree-growth-data-1" class="level3">
+<h3 class="anchored" data-anchor-id="tree-growth-data-1">Tree Growth Data</h3>
+<p>The tree growth data has less missing values, so I decided to start my exploration with this. Here, I’m primarily looking for slower growth as time goes on, since the drought likely increased in severity.</p>
+<p><strong>All diameters over time:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot diameter breast height over time</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dbh, <span class="fu">aes</span>(<span class="at">x=</span>date, <span class="at">y =</span> dbh_mm, <span class="at">col =</span> family)) <span class="sc">+</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>family) <span class="sc">+</span> <span class="fu">geom_smooth</span>(<span class="at">color=</span><span class="st">'black'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p><strong>Mean diameter over time:</strong></p>
+<p>Samples were taken all on the same day, so grouping by date and family produces the mean dbh for a specific day. Based on this alone, it’s hard to see growth over time, likely because taking the mean of a wide variety of diameters diminishes the trend slightly. Mean of</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create plots for each family (facet wrap makes growth hard to see)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>bur <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Burseraceae'</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> mean_daily_dbh)) <span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>sal <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Salicaceae'</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> mean_daily_dbh)) <span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>sap <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Sapotaceae'</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> mean_daily_dbh)) <span class="sc">+</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>eup <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Euphorbiaceae'</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> mean_daily_dbh)) <span class="sc">+</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="co"># plot all families</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(bur, sal, sap, eup, <span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">ncol =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="climate-data-1" class="level3">
+<h3 class="anchored" data-anchor-id="climate-data-1">Climate Data</h3>
+<p>Now I’m going to look at climate variables of interest over time. There is a lot of data that has a year, but not a specific day.</p>
+<p>Join data by date:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># # try joing by date, removing trees or clim data </span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># test &lt;- left_join(mean_dbh, clim_data, by = 'date')</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># colSums(is.na(test))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>

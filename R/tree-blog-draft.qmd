@@ -6,9 +6,14 @@ output: html_document
 ```{r,include=FALSE}
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
- 
+
+## Background
+
+The data collected spans the years 2012-2016 and measures tree diameter at breast height. During this time, there was a drought. My statistical analysis will evaluate 4 of the most commonly sampled tree species (maybe families) to see which fared better during the drought. I have added climate data to test for potential omitted variables bias. After creating the linear model, I'll conduct a time series analysis to view the seasonality and trends in growth. Since the drought was over this entire period of time, it's possible there will be a slow in growth for all species as the drought continues.
+
 Load Libraries
-```{r, include=FALSE}
+
+```{r, results='hide'}
 # data processing
 library(tidyverse)
 library(here)
@@ -25,7 +30,8 @@ library(tsibble)
 ```
 
 Read in Data
-```{r}
+
+```{r, results='hide'}
 # load tree data
 dbh_raw <- read_csv(here('data/long.data.DBH.csv'))
 initial_dbn <- read_csv(here('data/203-LFDPDendrometerData-Transposed.csv'))
@@ -37,30 +43,129 @@ clim_data_raw <- read_csv(here('data/EVFSTowerMetDaily_2023v2.csv'))
 ## Data Cleaning
 
 ### Tree Growth Data
+
 Dates are originally in Julian day and year, so these need to be converted to a `date` columm with the proper data type. Additionally, I checked for the most common species & created a subset of this tree type to potentially limit ommited variables bias.
 
 ```{r}
+# add family data to df
+dbh_raw <- dbh_raw %>% mutate(family =
+                     case_when(species == 'ALCFLO' ~ 'Euphorbiaceae',
+                               species == 'ALCLAT' ~ 'Euphorbiaceae',
+                               species == 'ANDINE' ~ 'Fabaceae-papilionoideae',
+                               species == 'CALCAL' ~ 'Clusiaceae',
+                               species == 'CASARB' ~ 'Salicaceae',
+                               species == 'CASSYL' ~ 'Salicaceae',
+                               species == 'CORSUL' ~ 'Boraginaceae',
+                               species == 'CROPOE' ~ 'Euphorbiaceae',
+                               species == 'CYAARB' ~ NA,
+                               species == 'DACEXC' ~ 'Burseraceae',
+                               species == 'DENARB' ~ 'Araliaceae',
+                               species == 'DRYGLA' ~ 'Putranjivaceae',
+                               species == 'EUGDOM' ~ 'Myrtaceae',
+                               species == 'GUAGUI' ~ 'Meliaceae',
+                               species == 'GUEVAL' ~ 'Rubiaceae',
+                               species == 'GUTCAR' ~ 'Annonaceae',
+                               species == 'HOMRAC' ~ 'Salicaceae',
+                               species == 'INGLAU' ~ 'Fabaceae-mimosoideae',
+                               species == 'MANBID' ~ 'Sapotaceae',
+                               species == 'MATDOM' ~ 'Sapindaceae',
+                               species == 'MELHER' ~ 'Sabiaceae',
+                               species == 'MIRCHR' ~ 'Sapotaceae',
+                               species == 'SAPLAU' ~ 'Euphorbiaceae',
+                               species == 'SLOBER' ~ 'Elaeocarpaceae',
+                               species == 'TABHET' ~ 'Bignoniaceae'))
+```
+
+```{r}
+# view the number of entries per species
+family_count <- plyr::count(dbh_raw$family)
+
 # clean data
 dbh <- dbh_raw %>%
   mutate(date = as.Date(paste(year, doy, sep="-"),"%Y-%j")) %>% 
-  rename(dbh_mm = dbh)
+  rename(dbh_mm = dbh) %>% #add units to diameter col
+  filter(family == 'Burseraceae' | family == 'Salicaceae' |
+           family == 'Sapotaceae' | family == 'Euphorbiaceae') %>% 
+  select(-(c('doy', 'year', 'flag')))#families w/most data
 
-# check number of entries per species
-plyr::count(dbh$species)
+# date frame that includes daily mean diameter
+mean_dbh <- dbh %>% 
+  group_by(date,family) %>% #group by date and family
+  mutate(mean_daily_dbh = mean(dbh_mm, na.rm = TRUE)) #calculate mean
 
-# create subset of most common species
-torchwoods <- dbh %>% filter(species == 'DACEXC')
+# asses NAs in each column
+colSums(is.na(dbh))
 ```
 
 ### Climate Data
+
 Climate data ranges from 2000-2022 and needs to be limited to the time period where data on trees was collected. There is more meteorological data than needed, so I selected key columns of interest. I might relate rain to growth, and then add `ppfd_millimoles_m2` as a potential omitted variable. This is "photosynthetic photon flux density" which is a measure of photosynthetically active photons (400-700nm) hitting a surface per unit area per unit time. In my own words, this is a measure of the presence of photons that can be utilized for photosynthesis, since not all wavelengths are used by plants.
 
 ```{r}
+# clean data
 clim_data <- clim_data_raw %>% 
   clean_names() %>% 
   filter(year > 2011 & year <= 2016) %>% #select drought years
-  select(c('date', 'year', 'rain_mm', 'tempmax_degreescelsius', 'ppfd_millimoles_m2')) %>% 
+  select(c('date', 'year', 'rain_mm', 'tempmax_degreescelsius', 'ppfd_millimoles_m2')) %>%  #select columns of interest for glm
   rename('max_temp_c' = 'tempmax_degreescelsius')
-  
+
+# asses number of NAs for each variable
+colSums(is.na(clim_data))
 ```
 
+## Data Exploration
+
+### Tree Growth Data
+
+The tree growth data has less missing values, so I decided to start my exploration with this. Here, I'm primarily looking for slower growth as time goes on, since the drought likely increased in severity.
+
+**All diameters over time:**
+
+```{r}
+# plot diameter breast height over time
+ggplot(dbh, aes(x=date, y = dbh_mm, col = family)) +
+  geom_point() + theme_minimal() + facet_wrap(~family) + geom_smooth(color='black')
+```
+
+**Mean diameter over time:**
+
+Samples were taken all on the same day, so grouping by date and family produces the mean dbh for a specific day. Based on this alone, it's hard to see growth over time, likely because taking the mean of a wide variety of diameters diminishes the trend slightly. Mean of
+
+```{r}
+# create plots for each family (facet wrap makes growth hard to see)
+bur <- mean_dbh %>% 
+  filter(family == 'Burseraceae') %>% 
+  ggplot(aes(x = date, y = mean_daily_dbh)) +
+  geom_point()
+
+sal <- mean_dbh %>% 
+  filter(family == 'Salicaceae') %>% 
+  ggplot(aes(x = date, y = mean_daily_dbh)) +
+  geom_point()
+
+sap <- mean_dbh %>% 
+  filter(family == 'Sapotaceae') %>% 
+  ggplot(aes(x = date, y = mean_daily_dbh)) +
+  geom_point()
+
+eup <- mean_dbh %>% 
+  filter(family == 'Euphorbiaceae') %>% 
+  ggplot(aes(x = date, y = mean_daily_dbh)) +
+  geom_point()
+
+# plot all families
+grid.arrange(bur, sal, sap, eup, nrow = 2, ncol = 2)
+```
+
+### Climate Data
+
+Now I'm going to look at climate variables of interest over time. There is a lot of data that has a year, but not a specific day.
+
+Join data by date:
+
+```{r}
+# # try joing by date, removing trees or clim data 
+# test <- left_join(mean_dbh, clim_data, by = 'date')
+# 
+# colSums(is.na(test))
+```
