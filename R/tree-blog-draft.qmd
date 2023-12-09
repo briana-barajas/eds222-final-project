@@ -36,8 +36,13 @@ Read in Data
 dbh_raw <- read_csv(here('data/long.data.DBH.csv'))
 initial_dbn <- read_csv(here('data/203-LFDPDendrometerData-Transposed.csv'))
 
-# load climate data
+# load daily climate data
 clim_data_raw <- read_csv(here('data/EVFSTowerMetDaily_2023v2.csv'))
+
+# read in hourly clim data
+clim_1999_2014 <- read_csv(here("data/NADPTowerHourlyData1999_2014.csv")) %>% clean_names()
+clim_2015_2023 <- read_csv(here('data/NADPTowerHourlyData2015_2023v2.csv')) %>% clean_names()
+
 ```
 
 ## Data Cleaning
@@ -97,7 +102,7 @@ mean_dbh <- dbh %>%
 colSums(is.na(dbh))
 ```
 
-### Climate Data
+### Climate Daily
 
 Climate data ranges from 2000-2022 and needs to be limited to the time period where data on trees was collected. There is more meteorological data than needed, so I selected key columns of interest. I might relate rain to growth, and then add `ppfd_millimoles_m2` as a potential omitted variable. This is "photosynthetic photon flux density" which is a measure of photosynthetically active photons (400-700nm) hitting a surface per unit area per unit time. In my own words, this is a measure of the presence of photons that can be utilized for photosynthesis, since not all wavelengths are used by plants.
 
@@ -111,6 +116,52 @@ clim_data <- clim_data_raw %>%
 
 # asses number of NAs for each variable
 colSums(is.na(clim_data))
+```
+
+### Climate Hourly
+
+Based on the `is.na()` assesment, there are a lot of missing dates for the daily data. I loaded the hourly data to see if I could calculate a rolling average with more accurate dates. Hourly had less NA values, so I removed the daily climate items from my environment, but left them in the code in case I needed it later.
+
+```{r, warning=FALSE}
+# 1999-2014 clean and filter
+hourly_clim_a <- clim_1999_2014 %>% 
+  mutate(datetime = mdy_hm(datetime)) %>% 
+  filter(year(datetime) > 2011) %>% 
+  select(c('datetime', 'rain_mm', 'temp_air_degrees_c', 'ppfd_millimoles_m2_hour')) %>% 
+  rename('temp_c' = 'temp_air_degrees_c')
+
+# 2015-2023 clean and filter
+hourly_clim_b <- clim_2015_2023 %>% 
+  mutate(datetime = ymd_hms(datetime)) %>% 
+  filter(year(datetime) < 2017) %>% 
+  select(c('datetime', 'rain_mm_tot', 'air_tc_avg', 'par_tot')) %>% 
+  rename('rain_mm' = 'rain_mm_tot',
+         'temp_c' = 'air_tc_avg',
+         'ppfd_millimoles_m2_hour' = 'par_tot')
+
+# check column names match
+colnames(hourly_clim_a) == colnames(hourly_clim_b)
+
+# bind df together
+hourly_clim <- rbind(hourly_clim_a, hourly_clim_b)
+
+# assess NAs
+colSums(is.na(hourly_clim))
+```
+
+```{r}
+# calculate rolling average (hourly -> daily)
+daily_clim <- hourly_clim %>% 
+  group_by(date = date(datetime)) %>% 
+  summarise(tot_rain_mm = sum(rain_mm, na.rm = TRUE),
+            avg_temp_c = mean(temp_c, na.rm = TRUE),
+            avg_ppfd_millimoles_m2 = mean(ppfd_millimoles_m2_hour, na.rm = TRUE))
+
+```
+
+```{r}
+# remove raw data + vars that won't be used
+rm(clim_1999_2014, clim_2015_2023, clim_data, clim_data_raw, dbh_raw, family_count, hourly_clim_a, hourly_clim_b, hourly_clim)
 ```
 
 ## Data Exploration
@@ -129,29 +180,33 @@ ggplot(dbh, aes(x=date, y = dbh_mm, col = family)) +
 
 **Mean diameter over time:**
 
-Samples were taken all on the same day, so grouping by date and family produces the mean dbh for a specific day. Based on this alone, it's hard to see growth over time, likely because taking the mean of a wide variety of diameters diminishes the trend slightly. Mean of
+Samples were taken all on the same day, so grouping by date and family produces the mean dbh for a specific day. Based on this alone, it's hard to see growth over time, likely because taking the mean of a wide variety of diameters diminishes the trend slightly.
 
 ```{r}
 # create plots for each family (facet wrap makes growth hard to see)
 bur <- mean_dbh %>% 
   filter(family == 'Burseraceae') %>% 
   ggplot(aes(x = date, y = mean_daily_dbh)) +
-  geom_point()
+  geom_point() +
+  labs(title = 'Burseraceae')
 
 sal <- mean_dbh %>% 
   filter(family == 'Salicaceae') %>% 
   ggplot(aes(x = date, y = mean_daily_dbh)) +
-  geom_point()
+  geom_point() +
+  labs(title = 'Salicaceae')
 
 sap <- mean_dbh %>% 
   filter(family == 'Sapotaceae') %>% 
   ggplot(aes(x = date, y = mean_daily_dbh)) +
-  geom_point()
+  geom_point() +
+  labs(title = 'Sapotaceae')
 
 eup <- mean_dbh %>% 
   filter(family == 'Euphorbiaceae') %>% 
   ggplot(aes(x = date, y = mean_daily_dbh)) +
-  geom_point()
+  geom_point() +
+  labs(title = 'Euphorbiaceae')
 
 # plot all families
 grid.arrange(bur, sal, sap, eup, nrow = 2, ncol = 2)
@@ -160,6 +215,34 @@ grid.arrange(bur, sal, sap, eup, nrow = 2, ncol = 2)
 ### Climate Data
 
 Now I'm going to look at climate variables of interest over time. There is a lot of data that has a year, but not a specific day.
+
+**Plot climate variables over time**:
+
+```{r}
+ggplot(daily_clim, aes(x = yearmonth(date), y = tot_rain_mm)) +
+  geom_col(fill = 'steelblue1') + theme_minimal() +
+  labs(x = 'Month',
+       y = 'Total Monthly Rain (mm)')
+
+ggplot(daily_clim, aes(x = yearmonth(date), y = avg_temp_c)) +
+  geom_col(fill = 'firebrick') + theme_minimal() +
+  labs(x = 'Month',
+       y = 'Average Monthly Temp (C)')
+
+ggplot(daily_clim, aes(x = yearmonth(date), y = avg_ppfd_millimoles_m2)) +
+  geom_col(fill = 'palegreen3') + theme_minimal() +
+  labs(x = 'Month',
+       y = 'Average Monthly Photosynthetic Flux Density (millimoes/m2)')
+```
+
+### Hourly Data
+
+```{r}
+
+
+```
+
+### Joining data
 
 Join data by date:
 
