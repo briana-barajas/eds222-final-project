@@ -155,13 +155,14 @@ daily_clim <- hourly_clim %>%
   group_by(date = date(datetime)) %>% 
   summarise(tot_rain_mm = sum(rain_mm, na.rm = TRUE),
             avg_temp_c = mean(temp_c, na.rm = TRUE),
-            avg_ppfd_millimoles_m2 = mean(ppfd_millimoles_m2_hour, na.rm = TRUE))
+            avg_ppfd_millimoles_m2 = mean(ppfd_millimoles_m2_hour, na.rm = TRUE)) %>% 
+  mutate(year_mo = yearmonth(date))
 
 ```
 
 ```{r}
 # remove raw data + vars that won't be used
-rm(clim_1999_2014, clim_2015_2023, clim_data, clim_data_raw, dbh_raw, family_count, hourly_clim_a, hourly_clim_b, hourly_clim)
+rm(clim_1999_2014, clim_2015_2023, clim_data, clim_data_raw, dbh_raw, family_count, hourly_clim_a, hourly_clim_b)
 ```
 
 ## Data Exploration
@@ -219,36 +220,77 @@ Now I'm going to look at climate variables of interest over time. There is a lot
 **Plot climate variables over time**:
 
 ```{r}
-ggplot(daily_clim, aes(x = yearmonth(date), y = tot_rain_mm)) +
+rain <- ggplot(daily_clim, aes(x = yearmonth(date), y = tot_rain_mm)) +
   geom_col(fill = 'steelblue1') + theme_minimal() +
   labs(x = 'Month',
-       y = 'Total Monthly Rain (mm)')
+       y = 'Monthly Rain (mm)')
 
-ggplot(daily_clim, aes(x = yearmonth(date), y = avg_temp_c)) +
+temp <- ggplot(daily_clim, aes(x = yearmonth(date), y = avg_temp_c)) +
   geom_col(fill = 'firebrick') + theme_minimal() +
   labs(x = 'Month',
-       y = 'Average Monthly Temp (C)')
+       y = 'Avg Monthly Temp (C)')
 
-ggplot(daily_clim, aes(x = yearmonth(date), y = avg_ppfd_millimoles_m2)) +
+ppfd <- ggplot(daily_clim, aes(x = yearmonth(date), y = avg_ppfd_millimoles_m2)) +
   geom_col(fill = 'palegreen3') + theme_minimal() +
   labs(x = 'Month',
-       y = 'Average Monthly Photosynthetic Flux Density (millimoes/m2)')
+       y = 'Photosynthetic Flux Density (millimoes/m2)')
+
+grid.arrange(rain, ppfd, temp, ncol = 2)
 ```
 
-### Hourly Data
+### Deconstructing Climate Variables
+
+**Preparation**:
+
+The `feasts()` package was not working with large gaps in the data, and unfortunately were was missing data for the last 3 months of 2012, and February 2014. To skip the 2012 gap, I simply removed that year from the analysis. I then created a new data frame that averaged by year-month, to run the decomposition analysis.
 
 ```{r}
+# find what months/years are missing data (cant run decomp w/missing data)
+lapply(split(daily_clim,format(as.Date(daily_clim$date),"%Y")), 
+       function(x) month.name[setdiff(seq(12),as.numeric(format(as.Date(x$date),"%m")))])
 
-
+# create year_mon averages, excluding 2012
+mon_clim <- hourly_clim %>%
+  filter(year(datetime) > 2012) %>% 
+  group_by(year_mo = yearmonth(datetime)) %>%
+  summarise(tot_rain_mm = sum(rain_mm, na.rm = TRUE),
+            avg_temp_c = mean(temp_c, na.rm = TRUE),
+            avg_ppfd_millimoles_m2 = mean(ppfd_millimoles_m2_hour, na.rm = TRUE)) %>%  as_tsibble(index = year_mo)
 ```
 
-### Joining data
-
-Join data by date:
+**Rain decomposition**:
 
 ```{r}
-# # try joing by date, removing trees or clim data 
-# test <- left_join(mean_dbh, clim_data, by = 'date')
-# 
-# colSums(is.na(test))
+# create rain decomp
+rain_dcmp <- mon_clim %>% 
+  model(STL(tot_rain_mm))
+
+# plot
+components(rain_dcmp) %>% autoplot()
+```
+
+**Temperature decomposition**:
+
+For temperature and ppfd there was no data for February 2014, to avoid removing another entire year I took the average of January and March 2014 and filled in the individual cell values.
+
+```{r}
+# fill data for Feb 2014
+mon_clim[14, 3] = (21.89624+22.24512)/2
+mon_clim[14, 4] = (376.9210+584.9981)/2
+```
+
+```{r}
+temp_dcmp <- mon_clim %>% 
+  model(STL(avg_temp_c))
+
+components(temp_dcmp) %>% autoplot()
+```
+
+**Photosynthetic Flux Density Decomposition:**
+
+```{r}
+ppfd_dcmp <- mon_clim %>% 
+  model(STL(avg_ppfd_millimoles_m2))
+
+components(ppfd_dcmp) %>% autoplot()
 ```

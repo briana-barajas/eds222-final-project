@@ -250,11 +250,12 @@ ppfd_millimoles_m2_hour
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(<span class="at">date =</span> <span class="fu">date</span>(datetime)) <span class="sc">%&gt;%</span> </span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">tot_rain_mm =</span> <span class="fu">sum</span>(rain_mm, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">avg_temp_c =</span> <span class="fu">mean</span>(temp_c, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">avg_ppfd_millimoles_m2 =</span> <span class="fu">mean</span>(ppfd_millimoles_m2_hour, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">avg_ppfd_millimoles_m2 =</span> <span class="fu">mean</span>(ppfd_millimoles_m2_hour, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year_mo =</span> <span class="fu">yearmonth</span>(date))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remove raw data + vars that won't be used</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(clim_1999_2014, clim_2015_2023, clim_data, clim_data_raw, dbh_raw, family_count, hourly_clim_a, hourly_clim_b, hourly_clim)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(clim_1999_2014, clim_2015_2023, clim_data, clim_data_raw, dbh_raw, family_count, hourly_clim_a, hourly_clim_b)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
@@ -312,40 +313,96 @@ ppfd_millimoles_m2_hour
 <p>Now I’m going to look at climate variables of interest over time. There is a lot of data that has a year, but not a specific day.</p>
 <p><strong>Plot climate variables over time</strong>:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(daily_clim, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">yearmonth</span>(date), <span class="at">y =</span> tot_rain_mm)) <span class="sc">+</span></span>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>rain <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(daily_clim, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">yearmonth</span>(date), <span class="at">y =</span> tot_rain_mm)) <span class="sc">+</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">'steelblue1'</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Month'</span>,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'Total Monthly Rain (mm)'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'Monthly Rain (mm)'</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>temp <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(daily_clim, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">yearmonth</span>(date), <span class="at">y =</span> avg_temp_c)) <span class="sc">+</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">'firebrick'</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Month'</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'Avg Monthly Temp (C)'</span>)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>ppfd <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(daily_clim, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">yearmonth</span>(date), <span class="at">y =</span> avg_ppfd_millimoles_m2)) <span class="sc">+</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">'palegreen3'</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Month'</span>,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'Photosynthetic Flux Density (millimoes/m2)'</span>)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(rain, ppfd, temp, <span class="at">ncol =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(daily_clim, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">yearmonth</span>(date), <span class="at">y =</span> avg_temp_c)) <span class="sc">+</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">'firebrick'</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Month'</span>,</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'Average Monthly Temp (C)'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-12-2.png" class="img-fluid" width="672"></p>
-</div>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(daily_clim, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">yearmonth</span>(date), <span class="at">y =</span> avg_ppfd_millimoles_m2)) <span class="sc">+</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">'palegreen3'</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Month'</span>,</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'Average Monthly Photosynthetic Flux Density (millimoes/m2)'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-12-3.png" class="img-fluid" width="672"></p>
-</div>
 </div>
 </section>
-<section id="hourly-data" class="level3">
-<h3 class="anchored" data-anchor-id="hourly-data">Hourly Data</h3>
-</section>
-<section id="joining-data" class="level3">
-<h3 class="anchored" data-anchor-id="joining-data">Joining data</h3>
-<p>Join data by date:</p>
+<section id="deconstructing-climate-variables" class="level3">
+<h3 class="anchored" data-anchor-id="deconstructing-climate-variables">Deconstructing Climate Variables</h3>
+<p><strong>Preparation</strong>:</p>
+<p>The <code>feasts()</code> package was not working with large gaps in the data, and unfortunately were was missing data for the last 3 months of 2012, and February 2014. To skip the 2012 gap, I simply removed that year from the analysis. I then created a new data frame that averaged by year-month, to run the decomposition analysis.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># # try joing by date, removing trees or clim data </span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># test &lt;- left_join(mean_dbh, clim_data, by = 'date')</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># colSums(is.na(test))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find what months/years are missing data (cant run decomp w/missing data)</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(<span class="fu">split</span>(daily_clim,<span class="fu">format</span>(<span class="fu">as.Date</span>(daily_clim<span class="sc">$</span>date),<span class="st">"%Y"</span>)), </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>       <span class="cf">function</span>(x) month.name[<span class="fu">setdiff</span>(<span class="fu">seq</span>(<span class="dv">12</span>),<span class="fu">as.numeric</span>(<span class="fu">format</span>(<span class="fu">as.Date</span>(x<span class="sc">$</span>date),<span class="st">"%m"</span>)))])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$`2012`
+[1] "October"  "November" "December"
+
+$`2013`
+character(0)
+
+$`2014`
+character(0)
+
+$`2015`
+character(0)
+
+$`2016`
+character(0)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create year_mon averages, excluding 2012</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>mon_clim <span class="ot">&lt;-</span> hourly_clim <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">year</span>(datetime) <span class="sc">&gt;</span> <span class="dv">2012</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(<span class="at">year_mo =</span> <span class="fu">yearmonth</span>(datetime)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">tot_rain_mm =</span> <span class="fu">sum</span>(rain_mm, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">avg_temp_c =</span> <span class="fu">mean</span>(temp_c, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">avg_ppfd_millimoles_m2 =</span> <span class="fu">mean</span>(ppfd_millimoles_m2_hour, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> year_mo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Rain decomposition</strong>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create rain decomp</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>rain_dcmp <span class="ot">&lt;-</span> mon_clim <span class="sc">%&gt;%</span> </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(<span class="fu">STL</span>(tot_rain_mm))</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co"># plot</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span>(rain_dcmp) <span class="sc">%&gt;%</span> <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p><strong>Temperature decomposition</strong>:</p>
+<p>For temperature and ppfd there was no data for February 2014, to avoid removing another entire year I took the average of January and March 2014 and filled in the individual cell values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fill data for Feb 2014</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>mon_clim[<span class="dv">14</span>, <span class="dv">3</span>] <span class="ot">=</span> (<span class="fl">21.89624+22.24512</span>)<span class="sc">/</span><span class="dv">2</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>mon_clim[<span class="dv">14</span>, <span class="dv">4</span>] <span class="ot">=</span> (<span class="fl">376.9210+584.9981</span>)<span class="sc">/</span><span class="dv">2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>temp_dcmp <span class="ot">&lt;-</span> mon_clim <span class="sc">%&gt;%</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(<span class="fu">STL</span>(avg_temp_c))</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span>(temp_dcmp) <span class="sc">%&gt;%</span> <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p><strong>Photosynthetic Flux Density Decomposition:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>ppfd_dcmp <span class="ot">&lt;-</span> mon_clim <span class="sc">%&gt;%</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(<span class="fu">STL</span>(avg_ppfd_millimoles_m2))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span>(ppfd_dcmp) <span class="sc">%&gt;%</span> <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
+</div>
 </div>
 </section>
 </section>
