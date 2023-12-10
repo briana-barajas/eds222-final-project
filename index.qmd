@@ -1,0 +1,6 @@
+---
+title: 'Drought Tolerance in Tropical Tree Species'
+author: 'Briana Barajas'
+date: 'Dec 10, 2023'
+output: html_document
+---
