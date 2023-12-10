@@ -4,3 +4,86 @@ author: 'Briana Barajas'
 date: 'Dec 10, 2023'
 output: html_document
 ---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r, include=FALSE}
+## ========== Load Libraries ==========
+# data processing
+library(tidyverse)
+library(here)
+library(janitor)
+library(lubridate)
+
+# plotting/aesthetics
+library(gridExtra)
+library(gt)
+
+# time series packages
+library(feasts)
+library(tsibble)
+```
+
+```{r, include=FALSE}
+## ========== Read in Data ==========
+# tree data on diameter breast height
+dbh_raw <- read_csv(here('data/long.data.DBH.csv'))
+
+# hourly climate data
+clim_1999_2014 <- read_csv(here("data/NADPTowerHourlyData1999_2014.csv")) %>% clean_names()
+clim_2015_2023 <- read_csv(here('data/NADPTowerHourlyData2015_2023v2.csv')) %>% clean_names()
+```
+
+```{r, include=FALSE}
+## ========== Tidy Tree Data =======
+# list of most sampled species
+species_list <- c('DACEXC', 'MANBID', 'CASARB', 'INGLAU')
+
+dbh <- dbh_raw %>% 
+  mutate(date = as.Date(paste(year, doy, sep="-"),"%Y-%j")) %>% 
+  rename(dbh_mm = dbh) %>% 
+  filter(species %in% species_list) %>% 
+  select(-c('doy', 'year','flag')) %>% 
+  group_by(date,species) %>% 
+  mutate(mean_daily_dbh = mean(dbh_mm, na.rm = TRUE),
+         year_mo = yearmonth(date)) %>% 
+  ungroup() %>% 
+  filter(date(date) >= "2014-06-01" &
+           date(date) < "2016-08-01")
+
+```
+
+```{r, include=FALSE}
+## ========== Tidy Climate Data =====
+# clean and filter data from 1999-2014
+clim_1999_2014 <- clim_1999_2014 %>% 
+  mutate(datetime = mdy_hm(datetime)) %>% 
+  filter(date(datetime) >= "2014-06-01" &
+           date(datetime) != "2015-01-01") %>% 
+  select(c('datetime', 'rain_mm', 'temp_air_degrees_c', 'ppfd_millimoles_m2_hour')) %>% 
+  rename('temp_c' = 'temp_air_degrees_c')
+
+# clean and filter data from 2015-2023
+clim_2015_2023 <- clim_2015_2023 %>% 
+  mutate(datetime = ymd_hms(datetime)) %>% 
+  filter(date(datetime) < "2016-08-01") %>% 
+  select(c('datetime', 'rain_mm_tot', 'air_tc_avg', 'par_tot')) %>% 
+  rename('rain_mm' = 'rain_mm_tot',
+         'temp_c' = 'air_tc_avg',
+         'ppfd_millimoles_m2_hour' = 'par_tot')
+
+# bind to combine study time (June 2014 - July 2016)
+hourly_conditions <- rbind(clim_1999_2014, clim_2015_2023)
+
+# convert hourly climate to daily averages
+daily_conditions <- hourly_conditions %>% 
+  group_by(date = date(datetime)) %>% 
+  summarise(tot_rain_mm = sum(rain_mm, na.rm = TRUE),
+            avg_temp_c = mean(temp_c, na.rm = TRUE),
+            avg_ppfd_millimoles_m2 = mean(ppfd_millimoles_m2_hour, na.rm = TRUE))
+
+# remove raw data variables
+rm(clim_1999_2014, clim_2015_2023, dbh_raw)
+```
