@@ -185,32 +185,32 @@ Samples were taken all on the same day, so grouping by date and family produces 
 
 ```{r}
 # create plots for each family (facet wrap makes growth hard to see)
-bur <- mean_dbh %>% 
+bur_plt <- mean_dbh %>% 
   filter(family == 'Burseraceae') %>% 
   ggplot(aes(x = date, y = mean_daily_dbh)) +
   geom_point() +
   labs(title = 'Burseraceae')
 
-sal <- mean_dbh %>% 
+sal_plt <- mean_dbh %>% 
   filter(family == 'Salicaceae') %>% 
   ggplot(aes(x = date, y = mean_daily_dbh)) +
   geom_point() +
   labs(title = 'Salicaceae')
 
-sap <- mean_dbh %>% 
+sap_plt <- mean_dbh %>% 
   filter(family == 'Sapotaceae') %>% 
   ggplot(aes(x = date, y = mean_daily_dbh)) +
   geom_point() +
   labs(title = 'Sapotaceae')
 
-eup <- mean_dbh %>% 
+eup_plt <- mean_dbh %>% 
   filter(family == 'Euphorbiaceae') %>% 
   ggplot(aes(x = date, y = mean_daily_dbh)) +
   geom_point() +
   labs(title = 'Euphorbiaceae')
 
 # plot all families
-grid.arrange(bur, sal, sap, eup, nrow = 2, ncol = 2)
+grid.arrange(bur_plt, sal_plt, sap_plt, eup_plt, nrow = 2, ncol = 2)
 ```
 
 ### Climate Data
@@ -238,7 +238,9 @@ ppfd <- ggplot(daily_clim, aes(x = yearmonth(date), y = avg_ppfd_millimoles_m2))
 grid.arrange(rain, ppfd, temp, ncol = 2)
 ```
 
-### Deconstructing Climate Variables
+## Time Series Analysis 
+
+### Climate Variable Decomposition
 
 **Preparation**:
 
@@ -293,4 +295,65 @@ ppfd_dcmp <- mon_clim %>%
   model(STL(avg_ppfd_millimoles_m2))
 
 components(ppfd_dcmp) %>% autoplot()
+```
+
+### Climate Variable Autocorrelation
+
+Only average temperature showed strong seasonality patterns, so I used it as an autocorrelation example. The autocorrelation plots for rain and ppfd are commented out.
+
+```{r}
+acf(mon_clim$avg_temp_c, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for Daily Temperature')
+
+# acf(mon_clim$tot_rain_mm, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for Daily Rain')
+# 
+# acf(mon_clim$avg_ppfd_millimoles_m2, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for PPFD')
+```
+
+```{r}
+acf(mon_clim$avg_ppfd_millimoles_m2, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for Daily Temperature')
+```
+
+## Statistical Analysis
+
+To begin, I am going to conduct linear model using time as one of my components. I will then add climate variables to see if they improve the model
+
+### Linear Model - Only DBH
+
+**Base model**: This model looks at daily dbh for all four families, unsurprisingly the intercept is very low. This is likely because the averages minimize any notable changes in growth, as we saw in the initial plot
+
+```{r}
+simple_model <- lm(mean_daily_dbh ~ date, data = mean_dbh)
+summary(simple_model)
+```
+
+**Family Models:** Creating models for individuals species...
+
+```{r}
+# create family subsets
+bur <- mean_dbh %>% filter(family == 'Burseraceae')
+sap <- mean_dbh %>% filter(family == 'Sapotaceae')
+eup <- mean_dbh %>% filter(family == 'Euphorbiaceae')
+sal <- mean_dbh %>% filter(family == 'Salicaceae')
+```
+
+```{r}
+# run models for all 
+bur_model <- lm(mean_daily_dbh ~ date, data = bur)
+sap_model <- lm(mean_daily_dbh ~ date, data = sap)
+eup_model <- lm(mean_daily_dbh ~ date, data = eup)
+sal_model <- lm(mean_daily_dbh ~ date, data = sal)
+
+# view results
+summary(bur_model)
+summary(sap_model)
+summary(eup_model)
+summary(sal_model)
+```
+
+### Decomposing DBH
+
+In addition to the climate variables, it is also useful to conduct a decomposition of diameter breast height for. Not sure if I'll do this because the data is not consistent enough, maybe I can try an actual rolling average before the decomp this time.
+
+```{r}
+
 ```

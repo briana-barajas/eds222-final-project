@@ -277,32 +277,32 @@ ppfd_millimoles_m2_hour
 <p>Samples were taken all on the same day, so grouping by date and family produces the mean dbh for a specific day. Based on this alone, it’s hard to see growth over time, likely because taking the mean of a wide variety of diameters diminishes the trend slightly.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create plots for each family (facet wrap makes growth hard to see)</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>bur <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>bur_plt <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Burseraceae'</span>) <span class="sc">%&gt;%</span> </span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> mean_daily_dbh)) <span class="sc">+</span></span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Burseraceae'</span>)</span>
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>sal <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>sal_plt <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
 <span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Salicaceae'</span>) <span class="sc">%&gt;%</span> </span>
 <span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> mean_daily_dbh)) <span class="sc">+</span></span>
 <span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Salicaceae'</span>)</span>
 <span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>sap <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>sap_plt <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
 <span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Sapotaceae'</span>) <span class="sc">%&gt;%</span> </span>
 <span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> mean_daily_dbh)) <span class="sc">+</span></span>
 <span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Sapotaceae'</span>)</span>
 <span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>eup <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>eup_plt <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> </span>
 <span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Euphorbiaceae'</span>) <span class="sc">%&gt;%</span> </span>
 <span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> mean_daily_dbh)) <span class="sc">+</span></span>
 <span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Euphorbiaceae'</span>)</span>
 <span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="co"># plot all families</span></span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(bur, sal, sap, eup, <span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">ncol =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(bur_plt, sal_plt, sap_plt, eup_plt, <span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">ncol =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
 </div>
@@ -334,8 +334,11 @@ ppfd_millimoles_m2_hour
 </div>
 </div>
 </section>
-<section id="deconstructing-climate-variables" class="level3">
-<h3 class="anchored" data-anchor-id="deconstructing-climate-variables">Deconstructing Climate Variables</h3>
+</section>
+<section id="time-series-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="time-series-analysis">Time Series Analysis</h2>
+<section id="climate-variable-decomposition" class="level3">
+<h3 class="anchored" data-anchor-id="climate-variable-decomposition">Climate Variable Decomposition</h3>
 <p><strong>Preparation</strong>:</p>
 <p>The <code>feasts()</code> package was not working with large gaps in the data, and unfortunately were was missing data for the last 3 months of 2012, and February 2014. To skip the 2012 gap, I simply removed that year from the analysis. I then created a new data frame that averaged by year-month, to run the decomposition analysis.</p>
 <div class="cell">
@@ -404,6 +407,162 @@ character(0)</code></pre>
 <p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+</section>
+<section id="climate-variable-autocorrelation" class="level3">
+<h3 class="anchored" data-anchor-id="climate-variable-autocorrelation">Climate Variable Autocorrelation</h3>
+<p>Only average temperature showed strong seasonality patterns, so I used it as an autocorrelation example. The autocorrelation plots for rain and ppfd are commented out.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(mon_clim<span class="sc">$</span>avg_temp_c, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for Daily Temperature'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># acf(mon_clim$tot_rain_mm, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for Daily Rain')</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co"># acf(mon_clim$avg_ppfd_millimoles_m2, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for PPFD')</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(mon_clim<span class="sc">$</span>avg_ppfd_millimoles_m2, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for Daily Temperature'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="statistical-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-analysis">Statistical Analysis</h2>
+<p>To begin, I am going to conduct linear model using time as one of my components. I will then add climate variables to see if they improve the model</p>
+<section id="linear-model---only-dbh" class="level3">
+<h3 class="anchored" data-anchor-id="linear-model---only-dbh">Linear Model - Only DBH</h3>
+<p><strong>Base model</strong>: This model looks at daily dbh for all four families, unsurprisingly the intercept is very low. This is likely because the averages minimize any notable changes in growth, as we saw in the initial plot</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>simple_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date, <span class="at">data =</span> mean_dbh)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(simple_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = mean_daily_dbh ~ date, data = mean_dbh)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-112.581  -54.913    4.165   64.118   82.774 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept) 1.234e+02  5.187e+01   2.378   0.0174 *
+date        5.616e-03  3.146e-03   1.785   0.0743 .
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 55.2 on 2968 degrees of freedom
+Multiple R-squared:  0.001073,  Adjusted R-squared:  0.000736 
+F-statistic: 3.187 on 1 and 2968 DF,  p-value: 0.07434</code></pre>
+</div>
+</div>
+<p><strong>Family Models:</strong> Creating models for individuals species…</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create family subsets</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>bur <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Burseraceae'</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>sap <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Sapotaceae'</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>eup <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Euphorbiaceae'</span>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>sal <span class="ot">&lt;-</span> mean_dbh <span class="sc">%&gt;%</span> <span class="fu">filter</span>(family <span class="sc">==</span> <span class="st">'Salicaceae'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run models for all </span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>bur_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date, <span class="at">data =</span> bur)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>sap_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date, <span class="at">data =</span> sap)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>eup_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date, <span class="at">data =</span> eup)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>sal_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date, <span class="at">data =</span> sal)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co"># view results</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(bur_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = mean_daily_dbh ~ date, data = bur)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.2224 -1.2323 -0.9975 -0.6181 17.6370 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 1.935e+02  5.172e+00   37.41   &lt;2e-16 ***
+date        5.325e-03  3.137e-04   16.97   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 3.401 on 1132 degrees of freedom
+Multiple R-squared:  0.2029,    Adjusted R-squared:  0.2022 
+F-statistic: 288.1 on 1 and 1132 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sap_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = mean_daily_dbh ~ date, data = sap)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-15.4318  -0.4571  -0.2015   0.4429   8.2532 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 1.236e+02  4.975e+00  24.852  &lt; 2e-16 ***
+date        2.232e-03  3.018e-04   7.396 4.04e-13 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 2.574 on 700 degrees of freedom
+Multiple R-squared:  0.07247,   Adjusted R-squared:  0.07115 
+F-statistic: 54.69 on 1 and 700 DF,  p-value: 4.038e-13</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(eup_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = mean_daily_dbh ~ date, data = eup)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-36.199  -0.112   0.712   0.881  14.674 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 1.159e+02  1.333e+01   8.697  &lt; 2e-16 ***
+date        6.319e-03  8.086e-04   7.816 4.25e-14 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 5.41 on 430 degrees of freedom
+Multiple R-squared:  0.1244,    Adjusted R-squared:  0.1224 
+F-statistic: 61.08 on 1 and 430 DF,  p-value: 4.245e-14</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sal_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = mean_daily_dbh ~ date, data = sal)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-62.214  -2.475   0.598   4.334  14.022 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 14.394158  18.015487   0.799    0.425    
+date         0.009039   0.001093   8.273  6.6e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 9.32 on 700 degrees of freedom
+Multiple R-squared:  0.08906,   Adjusted R-squared:  0.08776 
+F-statistic: 68.44 on 1 and 700 DF,  p-value: 6.597e-16</code></pre>
+</div>
+</div>
+</section>
+<section id="decomposing-dbh" class="level3">
+<h3 class="anchored" data-anchor-id="decomposing-dbh">Decomposing DBH</h3>
+<p>In addition to the climate variables, it is also useful to conduct a decomposition of diameter breast height for. Not sure if I’ll do this because the data is not consistent enough, maybe I can try an actual rolling average before the decomp this time.</p>
 </section>
 </section>
 
