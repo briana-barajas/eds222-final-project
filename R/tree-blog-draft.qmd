@@ -34,7 +34,6 @@ Read in Data
 ```{r, results='hide'}
 # load tree data
 dbh_raw <- read_csv(here('data/long.data.DBH.csv'))
-initial_dbn <- read_csv(here('data/203-LFDPDendrometerData-Transposed.csv'))
 
 # load daily climate data
 clim_data_raw <- read_csv(here('data/EVFSTowerMetDaily_2023v2.csv'))
@@ -110,7 +109,6 @@ Climate data ranges from 2000-2022 and needs to be limited to the time period wh
 # clean data
 clim_data <- clim_data_raw %>% 
   clean_names() %>% 
-  filter(year > 2011 & year <= 2016) %>% #select drought years
   select(c('date', 'year', 'rain_mm', 'tempmax_degreescelsius', 'ppfd_millimoles_m2')) %>%  #select columns of interest for glm
   rename('max_temp_c' = 'tempmax_degreescelsius')
 
@@ -150,7 +148,7 @@ colSums(is.na(hourly_clim))
 ```
 
 ```{r}
-# calculate rolling average (hourly -> daily)
+# calculate average (hourly -> daily)
 daily_clim <- hourly_clim %>% 
   group_by(date = date(datetime)) %>% 
   summarise(tot_rain_mm = sum(rain_mm, na.rm = TRUE),
@@ -238,7 +236,7 @@ ppfd <- ggplot(daily_clim, aes(x = yearmonth(date), y = avg_ppfd_millimoles_m2))
 grid.arrange(rain, ppfd, temp, ncol = 2)
 ```
 
-## Time Series Analysis 
+## Time Series Analysis
 
 ### Climate Variable Decomposition
 
@@ -355,5 +353,9 @@ summary(sal_model)
 In addition to the climate variables, it is also useful to conduct a decomposition of diameter breast height for. Not sure if I'll do this because the data is not consistent enough, maybe I can try an actual rolling average before the decomp this time.
 
 ```{r}
-
+# rolling_test <- bur %>% 
+#   group_by(tag) %>% 
+#   mutate(avg_14_days = rollmean(dbh_mm, k = 14, fill=NA))
 ```
+
+
