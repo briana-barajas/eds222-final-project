@@ -1,6 +1,10 @@
 ---
 title: 'Tree Growth Draft'
 output: html_document
+format: 
+  html:
+    code-fold: true
+    code-summary: "View Code"
 ---
 
 ```{r,include=FALSE}
@@ -36,7 +40,7 @@ Read in Data
 dbh_raw <- read_csv(here('data/long.data.DBH.csv'))
 
 # load daily climate data
-clim_data_raw <- read_csv(here('data/EVFSTowerMetDaily_2023v2.csv'))
+#clim_data_raw <- read_csv(here('data/EVFSTowerMetDaily_2023v2.csv'))
 
 # read in hourly clim data
 clim_1999_2014 <- read_csv(here("data/NADPTowerHourlyData1999_2014.csv")) %>% clean_names()
@@ -50,7 +54,8 @@ clim_2015_2023 <- read_csv(here('data/NADPTowerHourlyData2015_2023v2.csv')) %>% 
 
 Dates are originally in Julian day and year, so these need to be converted to a `date` columm with the proper data type. Additionally, I checked for the most common species & created a subset of this tree type to potentially limit ommited variables bias.
 
-```{r}
+```{r, eval=FALSE}
+## ========== Not Used ==========
 # add family data to df
 dbh_raw <- dbh_raw %>% mutate(family =
                      case_when(species == 'ALCFLO' ~ 'Euphorbiaceae',
@@ -81,23 +86,21 @@ dbh_raw <- dbh_raw %>% mutate(family =
 ```
 
 ```{r}
-# view the number of entries per species
-family_count <- plyr::count(dbh_raw$family)
+# clean tree species data
+species_list <- c('DACEXC', 'MANBID', 'CASARB', 'INGLAU')
 
-# clean data
-dbh <- dbh_raw %>%
+dbh <- dbh_raw %>% 
   mutate(date = as.Date(paste(year, doy, sep="-"),"%Y-%j")) %>% 
-  rename(dbh_mm = dbh) %>% #add units to diameter col
-  filter(family == 'Burseraceae' | family == 'Salicaceae' |
-           family == 'Sapotaceae' | family == 'Euphorbiaceae') %>% 
-  select(-(c('doy', 'year', 'flag')))#families w/most data
+  rename(dbh_mm = dbh) %>% 
+  filter(species %in% species_list) %>% 
+  select(-c('doy', 'year','flag')) %>% 
+  group_by(date,species) %>% 
+  mutate(mean_daily_dbh = mean(dbh_mm, na.rm = TRUE),
+         year_mo = yearmonth(date)) %>% 
+  ungroup() %>% 
+  filter(date(date) >= "2014-06-01" &
+           date(date) < "2016-08-01")
 
-# date frame that includes daily mean diameter
-mean_dbh <- dbh %>% 
-  group_by(date,family) %>% #group by date and family
-  mutate(mean_daily_dbh = mean(dbh_mm, na.rm = TRUE)) #calculate mean
-
-# asses NAs in each column
 colSums(is.na(dbh))
 ```
 
@@ -105,7 +108,8 @@ colSums(is.na(dbh))
 
 Climate data ranges from 2000-2022 and needs to be limited to the time period where data on trees was collected. There is more meteorological data than needed, so I selected key columns of interest. I might relate rain to growth, and then add `ppfd_millimoles_m2` as a potential omitted variable. This is "photosynthetic photon flux density" which is a measure of photosynthetically active photons (400-700nm) hitting a surface per unit area per unit time. In my own words, this is a measure of the presence of photons that can be utilized for photosynthesis, since not all wavelengths are used by plants.
 
-```{r}
+```{r, eval=FALSE}
+## ========== Daily data not used ======
 # clean data
 clim_data <- clim_data_raw %>% 
   clean_names() %>% 
@@ -120,7 +124,8 @@ colSums(is.na(clim_data))
 
 Based on the `is.na()` assesment, there are a lot of missing dates for the daily data. I loaded the hourly data to see if I could calculate a rolling average with more accurate dates. Hourly had less NA values, so I removed the daily climate items from my environment, but left them in the code in case I needed it later.
 
-```{r, warning=FALSE}
+```{r, eval=FALSE}
+## ========== Original Data Cleaning ==========
 # 1999-2014 clean and filter
 hourly_clim_a <- clim_1999_2014 %>% 
   mutate(datetime = mdy_hm(datetime)) %>% 
@@ -145,9 +150,7 @@ hourly_clim <- rbind(hourly_clim_a, hourly_clim_b)
 
 # assess NAs
 colSums(is.na(hourly_clim))
-```
 
-```{r}
 # calculate average (hourly -> daily)
 daily_clim <- hourly_clim %>% 
   group_by(date = date(datetime)) %>% 
@@ -155,12 +158,42 @@ daily_clim <- hourly_clim %>%
             avg_temp_c = mean(temp_c, na.rm = TRUE),
             avg_ppfd_millimoles_m2 = mean(ppfd_millimoles_m2_hour, na.rm = TRUE)) %>% 
   mutate(year_mo = yearmonth(date))
-
 ```
 
-```{r}
-# remove raw data + vars that won't be used
-rm(clim_1999_2014, clim_2015_2023, clim_data, clim_data_raw, dbh_raw, family_count, hourly_clim_a, hourly_clim_b)
+```{r, results='hide'}
+## ========== Cleaning in Blog ==========
+# clean and filter data from 1999-2014
+clim_1999_2014 <- clim_1999_2014 %>% 
+  mutate(datetime = mdy_hm(datetime)) %>% 
+  filter(date(datetime) >= "2014-06-01" &
+           date(datetime) != "2015-01-01") %>% 
+  select(c('datetime', 'rain_mm', 'temp_air_degrees_c', 'ppfd_millimoles_m2_hour')) %>% 
+  rename('temp_c' = 'temp_air_degrees_c')
+
+# clean and filter data from 2015-2023
+clim_2015_2023 <- clim_2015_2023 %>% 
+  mutate(datetime = ymd_hms(datetime)) %>% 
+  filter(date(datetime) < "2016-08-01") %>% 
+  select(c('datetime', 'rain_mm_tot', 'air_tc_avg', 'par_tot')) %>% 
+  rename('rain_mm' = 'rain_mm_tot',
+         'temp_c' = 'air_tc_avg',
+         'ppfd_millimoles_m2_hour' = 'par_tot')
+
+# bind to combine study time (June 2014 - July 2016)
+hourly_conditions <- rbind(clim_1999_2014, clim_2015_2023) %>% 
+  mutate(year_mo = yearmonth(datetime))
+
+# convert hourly climate to daily averages
+daily_conditions <- hourly_conditions %>% 
+  group_by(date = date(datetime)) %>% 
+  summarise(tot_rain_mm = sum(rain_mm, na.rm = TRUE),
+            avg_temp_c = mean(temp_c, na.rm = TRUE),
+            avg_ppfd_millimoles_m2 = mean(ppfd_millimoles_m2_hour, na.rm = TRUE)) %>% 
+   mutate(year_mo = yearmonth(date))
+  
+
+# remove raw data variables
+rm(clim_1999_2014, clim_2015_2023, dbh_raw)
 ```
 
 ## Data Exploration
@@ -173,15 +206,15 @@ The tree growth data has less missing values, so I decided to start my explorati
 
 ```{r}
 # plot diameter breast height over time
-ggplot(dbh, aes(x=date, y = dbh_mm, col = family)) +
-  geom_point() + theme_minimal() + facet_wrap(~family) + geom_smooth(color='black')
+ggplot(dbh, aes(x=date, y = dbh_mm, col = species)) +
+  geom_point() + theme_minimal() + facet_wrap(~species) + geom_smooth(color='black') + theme_classic()
 ```
 
 **Mean diameter over time:**
 
 Samples were taken all on the same day, so grouping by date and family produces the mean dbh for a specific day. Based on this alone, it's hard to see growth over time, likely because taking the mean of a wide variety of diameters diminishes the trend slightly.
 
-```{r}
+```{r, eval=FALSE}
 # create plots for each family (facet wrap makes growth hard to see)
 bur_plt <- mean_dbh %>% 
   filter(family == 'Burseraceae') %>% 
@@ -211,13 +244,26 @@ eup_plt <- mean_dbh %>%
 grid.arrange(bur_plt, sal_plt, sap_plt, eup_plt, nrow = 2, ncol = 2)
 ```
 
+```{r}
+ggplot(data = dbh, aes(x=date, y= mean_daily_dbh, col = species)) +
+  geom_point() +
+  labs(x = "Date",
+       y = "Diameter at Breast Height (mm)",
+       title = "Mean Diameter of Species") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  facet_wrap(~species, scales = "free_y")
+
+```
+
 ### Climate Data
 
 Now I'm going to look at climate variables of interest over time. There is a lot of data that has a year, but not a specific day.
 
 **Plot climate variables over time**:
 
-```{r}
+```{r, eval=FALSE}
+## ========== Original Code w/Daily Climate ==========
 rain <- ggplot(daily_clim, aes(x = yearmonth(date), y = tot_rain_mm)) +
   geom_col(fill = 'steelblue1') + theme_minimal() +
   labs(x = 'Month',
@@ -236,6 +282,38 @@ ppfd <- ggplot(daily_clim, aes(x = yearmonth(date), y = avg_ppfd_millimoles_m2))
 grid.arrange(rain, ppfd, temp, ncol = 2)
 ```
 
+::: panel-tabset
+#### Total Rain
+
+```{R}
+ggplot(daily_conditions, aes(x=year_mo, y = tot_rain_mm)) +
+  geom_col(fill = 'cornflowerblue') +
+  theme_classic() +
+  labs(x = "Month",
+       y = "Total Rain (mm)")
+```
+
+#### Average Temperature
+
+```{R}
+ggplot(daily_conditions, aes(x=year_mo, y = avg_temp_c)) +
+  geom_col(fill = 'firebrick') +
+  theme_classic() +
+  labs(x = "Month",
+       y = "Average Temperature (°C)")
+```
+
+#### Photosynthetic Flux
+
+```{R}
+ggplot(daily_conditions, aes(x=year_mo, y = avg_ppfd_millimoles_m2)) +
+  geom_col(fill = 'palegreen3') +
+  theme_classic() +
+  labs(x = "Month",
+       y = "Photosynthetic Photon Flux Density (mmol/m2)")
+```
+:::
+
 ## Time Series Analysis
 
 ### Climate Variable Decomposition
@@ -244,7 +322,7 @@ grid.arrange(rain, ppfd, temp, ncol = 2)
 
 The `feasts()` package was not working with large gaps in the data, and unfortunately were was missing data for the last 3 months of 2012, and February 2014. To skip the 2012 gap, I simply removed that year from the analysis. I then created a new data frame that averaged by year-month, to run the decomposition analysis.
 
-```{r}
+```{r, eval=FALSE}
 # find what months/years are missing data (cant run decomp w/missing data)
 lapply(split(daily_clim,format(as.Date(daily_clim$date),"%Y")), 
        function(x) month.name[setdiff(seq(12),as.numeric(format(as.Date(x$date),"%m")))])
@@ -258,9 +336,17 @@ mon_clim <- hourly_clim %>%
             avg_ppfd_millimoles_m2 = mean(ppfd_millimoles_m2_hour, na.rm = TRUE)) %>%  as_tsibble(index = year_mo)
 ```
 
+```{r}
+# check what months/years are missing (between June 2014 - July 2016)
+lapply(split(daily_conditions,format(as.Date(daily_conditions$date),"%Y")), 
+       function(x) month.name[setdiff(seq(12),as.numeric(format(as.Date(x$date),"%m")))])
+
+
+```
+
 **Rain decomposition**:
 
-```{r}
+```{r, eval=FALSE}
 # create rain decomp
 rain_dcmp <- mon_clim %>% 
   model(STL(tot_rain_mm))
@@ -269,17 +355,26 @@ rain_dcmp <- mon_clim %>%
 components(rain_dcmp) %>% autoplot()
 ```
 
+```{r, eval=FALSE}
+tb <- daily_conditions %>% 
+  as_tsibble(index = date) %>% 
+  fill_gaps() %>% 
+  model(STL(tot_rain_mm))
+
+components(tb) %>% autoplot()
+```
+
 **Temperature decomposition**:
 
 For temperature and ppfd there was no data for February 2014, to avoid removing another entire year I took the average of January and March 2014 and filled in the individual cell values.
 
-```{r}
+```{r, eval=FALSE}
 # fill data for Feb 2014
 mon_clim[14, 3] = (21.89624+22.24512)/2
 mon_clim[14, 4] = (376.9210+584.9981)/2
 ```
 
-```{r}
+```{r, eval=FALSE}
 temp_dcmp <- mon_clim %>% 
   model(STL(avg_temp_c))
 
@@ -288,7 +383,7 @@ components(temp_dcmp) %>% autoplot()
 
 **Photosynthetic Flux Density Decomposition:**
 
-```{r}
+```{r, eval=FALSE}
 ppfd_dcmp <- mon_clim %>% 
   model(STL(avg_ppfd_millimoles_m2))
 
@@ -299,7 +394,7 @@ components(ppfd_dcmp) %>% autoplot()
 
 Only average temperature showed strong seasonality patterns, so I used it as an autocorrelation example. The autocorrelation plots for rain and ppfd are commented out.
 
-```{r}
+```{r, eval=FALSE}
 acf(mon_clim$avg_temp_c, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for Daily Temperature')
 
 # acf(mon_clim$tot_rain_mm, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for Daily Rain')
@@ -307,7 +402,7 @@ acf(mon_clim$avg_temp_c, lag.max = 12, na.action = na.pass,  main = 'Autocorrela
 # acf(mon_clim$avg_ppfd_millimoles_m2, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for PPFD')
 ```
 
-```{r}
+```{r, eval=FALSE}
 acf(mon_clim$avg_ppfd_millimoles_m2, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for Daily Temperature')
 ```
 
@@ -319,14 +414,14 @@ To begin, I am going to conduct linear model using time as one of my components.
 
 **Base model**: This model looks at daily dbh for all four families, unsurprisingly the intercept is very low. This is likely because the averages minimize any notable changes in growth, as we saw in the initial plot
 
-```{r}
+```{r, eval=FALSE}
 simple_model <- lm(mean_daily_dbh ~ date, data = mean_dbh)
 summary(simple_model)
 ```
 
 **Family Models:** Creating models for individuals species...
 
-```{r}
+```{r, eval=FALSE}
 # create family subsets
 bur <- mean_dbh %>% filter(family == 'Burseraceae')
 sap <- mean_dbh %>% filter(family == 'Sapotaceae')
@@ -334,7 +429,7 @@ eup <- mean_dbh %>% filter(family == 'Euphorbiaceae')
 sal <- mean_dbh %>% filter(family == 'Salicaceae')
 ```
 
-```{r}
+```{r, eval=FALSE}
 # run models for all 
 bur_model <- lm(mean_daily_dbh ~ date, data = bur)
 sap_model <- lm(mean_daily_dbh ~ date, data = sap)
@@ -357,5 +452,3 @@ In addition to the climate variables, it is also useful to conduct a decompositi
 #   group_by(tag) %>% 
 #   mutate(avg_14_days = rollmean(dbh_mm, k = 14, fill=NA))
 ```
-
-
