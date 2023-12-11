@@ -3,4 +3,6 @@
 .RData
 .Ruserdata
 data/
+index_files/
+tree-blog-draft_files/
 .DS_Store
