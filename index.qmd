@@ -87,3 +87,25 @@ daily_conditions <- hourly_conditions %>%
 # remove raw data variables
 rm(clim_1999_2014, clim_2015_2023, dbh_raw)
 ```
+
+## Motivation
+
+Enter background here...
+
+\[add map\]
+
+## Data
+
+About the data & Luquillo research forest
+
+## Analysis
+
+Describe the analysis, I'm conducting a
+
+## Results
+
+Add plots with short descriptions
+
+## Limitations
+
+Data limitations, time, missing values, etc.
