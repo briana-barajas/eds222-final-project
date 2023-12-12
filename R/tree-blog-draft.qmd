@@ -23,7 +23,6 @@ library(tidyverse)
 library(here)
 library(janitor)
 library(lubridate)
-library(zoo)
 
 # plotting/aesthetics
 library(sjPlot)
@@ -32,6 +31,7 @@ library(sjPlot)
 library(feasts)
 library(tsibble)
 library(dynlm)
+library(zoo)
 ```
 
 Read in Data
@@ -67,6 +67,7 @@ dbh <- dbh_raw %>%
   ungroup() %>% 
   filter(date(date) >= "2014-06-01" &
            date(date) < "2016-08-01")
+
 # add family distribution data
 dbh <- dbh %>% 
   mutate(family = case_when(species == 'CASARB' ~ 'Salicaceae',
@@ -76,7 +77,10 @@ dbh <- dbh %>%
          distribution = case_when(family == 'Salicaceae' ~ 'wide',
                                   family == 'Sapotaceae' ~ 'narrow',
                                   family == 'Burseraceae' ~ 'narrow',
-                                  family == 'Fabaceae' ~ 'wide'),
+```
+
+```{r}
+family == 'Fabaceae' ~ 'wide'),
          distribution = as.factor(distribution))
 
 colSums(is.na(dbh))
@@ -126,6 +130,9 @@ daily_conditions <- hourly_conditions %>%
 
 # remove raw data variables
 rm(clim_1999_2014, clim_2015_2023, dbh_raw)
+```
+
+```{r}
 ```
 
 ```{r}
@@ -328,25 +335,6 @@ tab_model(dacexc_model, manbid_model,
 
 ### Multiple Linear Regression
 
-#### Parallel Slopes
-
-The type of distribution (wide or narrow) can be added to the regression as a categorical variable. In this model, the hypothesis is that species in the wide distribution category will have faster growth (larger positive $\beta_1$ ) than species with a narrow distribution. Mathematically, this model is looking for the following: $$ \hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2 $$
-
-Where $x_1$ is the categorical variable (distribution) and $x_2$ is the continuous variable (time).
-
-```{r, eval=FALSE}
-# group species by their distribution
-dist_grouped <- dbh %>% 
-  group_by(distribution, date) %>% 
-  summarise(mean_daily_dbh = mean(dbh_mm, na.rm = TRUE))
-
-# try plotting
-ggplot(data = dist_grouped, aes(x=date, y = mean_daily_dbh), fill = distribution) +
-  geom_smooth()
-```
-
-I realized I don't know how to run this in R so I'm skipping for now.
-
 #### Adding Climate
 
 The key question in this study is asking how drought affects growth rate. While time is a good starting indicator since we know the drought lasted 2013-2016, and trees do grow over time, it is not an appropriate estimate of climate. Since optimal daily conditions will likely have a lagged response in growth, I'm trying to run a *dynamic time series*.
@@ -364,7 +352,6 @@ acf(manbid$mean_daily_dbh, lag.max = 12, na.action = na.pass,  main = 'Autocorre
 
 # as expected, diameters high high autocorrelation
 ```
-
 
 ### Static Time Series
 
@@ -394,10 +381,26 @@ tab_model(dacexc_model2, manbid_model2,
 ```
 
 ### Dynamic Time Series
+
 Couldn't figure out
+
+```{r}
+test <- dacexc %>% 
+  group_by(date) %>% 
+  summarise(mean_daily_dbh = mean(dbh_mm)) 
+
+test <- left_join(test, daily_conditions, by = 'date') %>% 
+  as_tsibble(index=date)
+```
+
 ```{r, eval=FALSE}
-dacexc_model3 <- dynlm(mean_daily_dbh ~ date + L(tot_rain_mm) + 
-                      avg_temp_c + avg_ppfd_mmol_m2, data = dacexc)
+dacexc_model3 <- dynlm(mean_daily_dbh ~ lag(mean_daily_dbh, 1) + tot_rain_mm + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = test)
+
+model <- dynlm(dbh ~ L(dbh, lag = 1) + climate_condition + time, data = your_data)
+
+
+
 manbid_model3 <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
                       avg_temp_c + avg_ppfd_mmol_m2, data = manbid)
 
@@ -419,41 +422,6 @@ tab_model(dacexc_model3, manbid_model3,
           digits = 4)
 ```
 
-
 ```{r, eval=FALSE}
-test <- full %>% filter(species == 'MANBID') %>%
-  group_by(date) %>% 
-  summarise(mean_daily_dbh = mean(dbh_mm, na.rm = TRUE),
-            tot_rain_mm = sum(tot_rain_mm, na.rm = TRUE),
-            avg_temp_c = mean(avg_temp_c, na.rm = TRUE),
-            avg_ppfd_mmol_m2 = mean(avg_ppfd_mmol_m2, na.rm = TRUE)) %>% 
-  as_tsibble(index = date)
-
-# replace zeros w/NA, no data collected October 2014
-test['tot_rain_mm'][test['tot_rain_mm'] == 0] <- NA
-test['avg_temp_c'][test['avg_temp_c'] == 'NaN'] <- NA
-test['avg_ppfd_mmol_m2'][test['avg_ppfd_mmol_m2'] == 'NaN'] <- NA
-
-
-# replace NAs with the mean of previous and next month
-test$avg_temp_c <- na.approx(test$avg_temp_c)
-test$avg_ppfd_mmol_m2 <- na.approx(test$avg_ppfd_mmol_m2)
-test$tot_rain_mm <- na.approx(test$tot_rain_mm, maxgap = Inf)
+summary(dacexc_model3)
 ```
-
-```{r, eval=FALSE}
-test_mod <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
-                      avg_temp_c + avg_ppfd_mmol_m2, data = test)
-
-summary(test_mod)
-```
-
-```{r, eval=FALSE}
-df <- as.ts(manbid)
-
-test_mod2 <- dynlm(mean_daily_dbh ~ L(date) + L(tot_rain_mm) +
-                   L(avg_temp_c) + L(avg_ppfd_mmol_m2),
-                   data = df)
-summary(test_mod2)
-```
-
