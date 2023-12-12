@@ -16,6 +16,7 @@ library(tidyverse)
 library(here)
 library(janitor)
 library(lubridate)
+library(zoo)
 
 # plotting/aesthetics
 library(gridExtra)
@@ -34,6 +35,36 @@ dbh_raw <- read_csv(here('data/long.data.DBH.csv'))
 # hourly climate data
 clim_1999_2014 <- read_csv(here("data/NADPTowerHourlyData1999_2014.csv")) %>% clean_names()
 clim_2015_2023 <- read_csv(here('data/NADPTowerHourlyData2015_2023v2.csv')) %>% clean_names()
+```
+
+```{r}
+## ========== Add Family Columns
+dbh_raw <- dbh_raw %>% mutate(family =
+                                case_when(species == 'ALCFLO' ~ 'Euphorbiaceae',
+                                          species == 'ALCLAT' ~ 'Euphorbiaceae',
+                                          species == 'ANDINE' ~ 'Fabaceae',
+                                          species == 'CALCAL' ~ 'Clusiaceae',
+                                          species == 'CASARB' ~ 'Salicaceae',
+                                          species == 'CASSYL' ~ 'Salicaceae',
+                                          species == 'CORSUL' ~ 'Boraginaceae',
+                                          species == 'CROPOE' ~ 'Euphorbiaceae',
+                                          species == 'CYAARB' ~ NA,
+                                          species == 'DACEXC' ~ 'Burseraceae',
+                                          species == 'DENARB' ~ 'Araliaceae',
+                                          species == 'DRYGLA' ~ 'Putranjivaceae',
+                                          species == 'EUGDOM' ~ 'Myrtaceae',
+                                          species == 'GUAGUI' ~ 'Meliaceae',
+                                          species == 'GUEVAL' ~ 'Rubiaceae',
+                                          species == 'GUTCAR' ~ 'Annonaceae',
+                                          species == 'HOMRAC' ~ 'Salicaceae',
+                                          species == 'INGLAU' ~ 'Fabaceae',
+                                          species == 'MANBID' ~ 'Sapotaceae',
+                                          species == 'MATDOM' ~ 'Sapindaceae',
+                                          species == 'MELHER' ~ 'Sabiaceae',
+                                          species == 'MIRCHR' ~ 'Sapotaceae',
+                                          species == 'SAPLAU' ~ 'Euphorbiaceae',
+                                          species == 'SLOBER' ~ 'Elaeocarpaceae',
+                                          species == 'TABHET' ~ 'Bignoniaceae'))
 ```
 
 ```{r, include=FALSE}
@@ -98,9 +129,19 @@ Enter background here...
 
 About the data & Luquillo research forest
 
-## Analysis
+## Analysis - Regressions
 
-Describe the analysis, I'm conducting a
+### Simple linear regression
+
+Regression using time and diameter breast height
+
+### Multiple Linear Regression
+
+Regression using diameter over time, and all climate variables
+
+## Analysis - Hypothesis Testing
+
+Compare the slopes of the two models w/highest adjusted R-squared values
 
 ## Results
 
