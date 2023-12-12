@@ -169,14 +169,16 @@ ggplot(dbh, aes(x=date, y = dbh_mm, col = species)) +
 Samples were taken all on the same day, so grouping by `date` and `species` produces the mean dbh for a specific day. I set the y-axis to be independent of each other so the growth patterns were slightly more explicit. If `facet_wrap()` is set to keep the same axes, the trends in growth look much more similar.
 
 ```{r}
-ggplot(data = dbh, aes(x=date, y= mean_daily_dbh, col = species)) +
+ggplot(data = dbh, aes(x=date, y= mean_daily_dbh, col = distribution)) +
   geom_point() +
+  scale_color_manual(values = c('#B40052', '#37947D'))+
   labs(x = "Date",
        y = "Diameter at Breast Height (mm)",
        title = "Mean Diameter of Species") +
+  guides(color = guide_legend(title = "Distribution")) +
   theme_classic() +
   theme(plot.title = element_text(hjust = 0.5)) +
-  facet_wrap(~species, scales = "free_y")
+  facet_wrap(~species)
 
 ```
 
@@ -363,9 +365,8 @@ acf(manbid$mean_daily_dbh, lag.max = 12, na.action = na.pass,  main = 'Autocorre
 # as expected, diameters high high autocorrelation
 ```
 
-::: panel-tabset
 
-#### Static Time Series
+### Static Time Series
 
 ```{r}
 # run models w/climate variables
@@ -392,9 +393,9 @@ tab_model(dacexc_model2, manbid_model2,
           digits = 4)
 ```
 
-#### Dynamic Time Series
-
-```{r}
+### Dynamic Time Series
+Couldn't figure out
+```{r, eval=FALSE}
 dacexc_model3 <- dynlm(mean_daily_dbh ~ date + L(tot_rain_mm) + 
                       avg_temp_c + avg_ppfd_mmol_m2, data = dacexc)
 manbid_model3 <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
@@ -418,7 +419,6 @@ tab_model(dacexc_model3, manbid_model3,
           digits = 4)
 ```
 
-:::
 
 ```{r, eval=FALSE}
 test <- full %>% filter(species == 'MANBID') %>%
