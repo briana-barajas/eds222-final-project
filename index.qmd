@@ -186,10 +186,14 @@ ggplot(data = dbh, aes(x=date, y= mean_daily_dbh, col = distribution)) +
 A simple linear regression time series looking at tree diameter over time for four species.
 ```{r}
 # create subsets for each individual species
-dacexc <- clim_dbh_full %>% filter(species == 'DACEXC')
-manbid <- clim_dbh_full %>% filter(species == 'MANBID')
-inglau <- clim_dbh_full %>% filter(species == 'INGLAU')
-casarb <- clim_dbh_full %>% filter(species == 'CASARB')
+dacexc <- clim_dbh_full %>% filter(species == 'DACEXC') %>% 
+  as_tsibble(index = date)
+manbid <- clim_dbh_full %>% filter(species == 'MANBID') %>% 
+  as_tsibble(index = date)
+inglau <- clim_dbh_full %>% filter(species == 'INGLAU') %>% 
+  as_tsibble(index = date)
+casarb <- clim_dbh_full %>% filter(species == 'CASARB') %>% 
+  as_tsibble(index = date)
 
 # run linear regressions
 dacexc_model <- lm(mean_daily_dbh ~ date, data = dacexc)
@@ -242,10 +246,31 @@ tab_model(dacexc_model2, manbid_model2,
 ## Analysis - Dynamic Time Series
 Introducing lag into tree growth
 ```{r, eval=FALSE}
-# convert species df into tsibble object
-dacexc_model3 <- lm(mean_daily_dbh ~ date + tot_rain_mm + 
-                      avg_temp_c + avg_ppfd_mmol_m2, data = dacexc)
+# conduct dynamic regression
+dacexc_model3 <- dynlm(mean_daily_dbh ~ lag(tot_rain_mm, 1) + lag(avg_temp_c, 1) +
+                         lag(avg_ppfd_mmol_m2, 1), data = dacexc)
+manbid_model3 <- dynlm(mean_daily_dbh ~ lag(tot_rain_mm, 1) + lag(avg_temp_c, 1) +
+                         lag(avg_ppfd_mmol_m2, 1), data = manbid)
+inglau_model3 <- dynlm(mean_daily_dbh ~ lag(tot_rain_mm, 1) + lag(avg_temp_c, 1) +
+                         lag(avg_ppfd_mmol_m2, 1), data = inglau)
+casarb_model3 <- dynlm(mean_daily_dbh ~ lag(tot_rain_mm, 1) + lag(avg_temp_c, 1) +
+                         lag(avg_ppfd_mmol_m2, 1), data = casarb)
+
+# view results (wide distribution)
+tab_model(inglau_model3, casarb_model3,
+          title = 'Wide Distribution',
+          dv.labels = c('I. laurina', 'C. arborea'),
+          digits = 4)
+
+# view results (narrow distribution)
+tab_model(dacexc_model3, manbid_model3,
+          title = "Narrow Distribution",
+          dv.labels = c('D. excelsa', 'M. bidentata'),
+          digits = 4)
 ```
+
+
+
 
 ## Results
 
