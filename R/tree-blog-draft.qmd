@@ -143,6 +143,12 @@ monthly_conditions['tot_rain_mm'][monthly_conditions['tot_rain_mm'] == 0] <- NA
 monthly_conditions$tot_rain_mm <- na.approx(monthly_conditions$tot_rain_mm)
 ```
 
+## Join Data
+
+```{r}
+full <- left_join(dbh, daily_conditions, by = c('date', 'year_mo'))
+```
+
 ## Data Exploration
 
 ### Tree Growth Data
@@ -265,6 +271,24 @@ ppfd_dcmp <- monthly_conditions %>%
 components(ppfd_dcmp) %>% autoplot()
 ```
 
+### DBH Decomposition
+
+I was hoping decomposition would show slower growth during warmer months, but the trend seems to be the strongest component. I likely won't be including this.
+
+```{r, eval=FALSE}
+test <- casarb %>% 
+  group_by(year_mo) %>% 
+  summarise(mean_monthly_dbh = mean(dbh_mm, na.rm = TRUE)) %>% 
+  as_tsibble(index = year_mo) %>% 
+  fill_gaps() 
+
+test$mean_monthly_dbh <- na.approx(test$mean_monthly_dbh)
+
+md <- test %>% model(STL(mean_monthly_dbh))
+
+components(md) %>% autoplot()
+```
+
 ## Statistical Analysis
 
 ### Simple Linear Regression
@@ -275,10 +299,10 @@ In its simplest form, the linear regression will test changes in `mean_daily_dbh
 
 ```{r}
 # create subsets for each individual species
-dacexc <- dbh %>% filter(species == 'DACEXC')
-manbid <- dbh %>% filter(species == 'MANBID')
-inglau <- dbh %>% filter(species == 'INGLAU')
-casarb <- dbh %>% filter(species == 'CASARB')
+dacexc <- full %>% filter(species == 'DACEXC')
+manbid <- full %>% filter(species == 'MANBID')
+inglau <- full %>% filter(species == 'INGLAU')
+casarb <- full %>% filter(species == 'CASARB')
 
 # run linear regressions
 dacexc_model <- lm(mean_daily_dbh ~ date, data = dacexc)
@@ -289,8 +313,78 @@ casarb_model <- lm(mean_daily_dbh ~ date, data = casarb)
 # view results (wide distribution)
 tab_model(inglau_model, casarb_model,
           title = 'Wide Distribution',
-          dv.labels = c('I. laurina', 'C. arborea'))
+          dv.labels = c('I. laurina', 'C. arborea'),
+          digits = 4)
+
+# view results (narrow distribution)
 tab_model(dacexc_model, manbid_model,
           title = "Narrow Distribution",
-          dv.labels = c('D. excelsa', 'M bidentata'))
+          dv.labels = c('D. excelsa', 'M. bidentata'),
+          digits = 4)
+```
+
+### Multiple Linear Regression
+
+#### Parallel Slopes
+
+The type of distribution (wide or narrow) can be added to the regression as a categorical variable. In this model, the hypothesis is that species in the wide distribution category will have faster growth (larger positive $\beta_1$ ) than species with a narrow distribution. Mathematically, this model is looking for the following: $$ \hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2 $$
+
+Where $x_1$ is the categorical variable (distribution) and $x_2$ is the continuous variable (time).
+
+```{r, eval=FALSE}
+# group species by their distribution
+dist_grouped <- dbh %>% 
+  group_by(distribution, date) %>% 
+  summarise(mean_daily_dbh = mean(dbh_mm, na.rm = TRUE))
+
+# try plotting
+ggplot(data = dist_grouped, aes(x=date, y = mean_daily_dbh), fill = distribution) +
+  geom_smooth()
+```
+
+I realized I don't know how to run this in R so I'm skipping for now.
+
+#### Adding Climate
+
+The key question in this study is asking how drought affects growth rate. While time is a good starting indicator since we know the drought lasted 2013-2016, and trees do grow over time, it is not an appropriate estimate of climate. Since optimal daily conditions will likely have a lagged response in growth, I'm trying to run a *dynamic time series*.
+
+First, check for autocorrelation:
+
+```{r}
+# wide distribution
+acf(casarb$mean_daily_dbh, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for CASARB Diameter')
+acf(inglau$mean_daily_dbh, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for INGLAU Diameter')
+
+# narrow distribution 
+acf(dacexc$mean_daily_dbh, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for DACEXC Diameter')
+acf(manbid$mean_daily_dbh, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for MANBID Diameter')
+
+# as expected, diameters high high autocorrelation
+```
+
+Static Time Series**:**
+
+```{r}
+# run models w/climate variables
+dacexc_model2 <- lm(mean_daily_dbh ~ date + tot_rain_mm + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = dacexc)
+manbid_model2 <- lm(mean_daily_dbh ~ date + tot_rain_mm + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = manbid)
+
+inglau_model2 <- lm(mean_daily_dbh ~ date + tot_rain_mm + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = inglau)
+casarb_model2 <- lm(mean_daily_dbh ~ date + tot_rain_mm + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = casarb)
+
+# view results (wide distribution)
+tab_model(inglau_model2, casarb_model2,
+          title = 'Wide Distribution',
+          dv.labels = c('I. laurina', 'C. arborea'),
+          digits = 4)
+
+# view results (narrow distribution)
+tab_model(dacexc_model2, manbid_model2,
+          title = "Narrow Distribution",
+          dv.labels = c('D. excelsa', 'M. bidentata'),
+          digits = 4)
 ```
