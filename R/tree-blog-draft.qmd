@@ -31,6 +31,7 @@ library(sjPlot)
 # time series packages
 library(feasts)
 library(tsibble)
+library(dynlm)
 ```
 
 Read in Data
@@ -362,7 +363,9 @@ acf(manbid$mean_daily_dbh, lag.max = 12, na.action = na.pass,  main = 'Autocorre
 # as expected, diameters high high autocorrelation
 ```
 
-Static Time Series**:**
+::: panel-tabset
+
+#### Static Time Series
 
 ```{r}
 # run models w/climate variables
@@ -388,3 +391,69 @@ tab_model(dacexc_model2, manbid_model2,
           dv.labels = c('D. excelsa', 'M. bidentata'),
           digits = 4)
 ```
+
+#### Dynamic Time Series
+
+```{r}
+dacexc_model3 <- dynlm(mean_daily_dbh ~ date + L(tot_rain_mm) + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = dacexc)
+manbid_model3 <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = manbid)
+
+inglau_model3 <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = inglau)
+casarb_model3 <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = casarb)
+
+# view results (wide distribution)
+tab_model(inglau_model3, casarb_model3,
+          title = 'Wide Distribution',
+          dv.labels = c('I. laurina', 'C. arborea'),
+          digits = 4)
+
+# view results (narrow distribution)
+tab_model(dacexc_model3, manbid_model3,
+          title = "Narrow Distribution",
+          dv.labels = c('D. excelsa', 'M. bidentata'),
+          digits = 4)
+```
+
+:::
+
+```{r, eval=FALSE}
+test <- full %>% filter(species == 'MANBID') %>%
+  group_by(date) %>% 
+  summarise(mean_daily_dbh = mean(dbh_mm, na.rm = TRUE),
+            tot_rain_mm = sum(tot_rain_mm, na.rm = TRUE),
+            avg_temp_c = mean(avg_temp_c, na.rm = TRUE),
+            avg_ppfd_mmol_m2 = mean(avg_ppfd_mmol_m2, na.rm = TRUE)) %>% 
+  as_tsibble(index = date)
+
+# replace zeros w/NA, no data collected October 2014
+test['tot_rain_mm'][test['tot_rain_mm'] == 0] <- NA
+test['avg_temp_c'][test['avg_temp_c'] == 'NaN'] <- NA
+test['avg_ppfd_mmol_m2'][test['avg_ppfd_mmol_m2'] == 'NaN'] <- NA
+
+
+# replace NAs with the mean of previous and next month
+test$avg_temp_c <- na.approx(test$avg_temp_c)
+test$avg_ppfd_mmol_m2 <- na.approx(test$avg_ppfd_mmol_m2)
+test$tot_rain_mm <- na.approx(test$tot_rain_mm, maxgap = Inf)
+```
+
+```{r, eval=FALSE}
+test_mod <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
+                      avg_temp_c + avg_ppfd_mmol_m2, data = test)
+
+summary(test_mod)
+```
+
+```{r, eval=FALSE}
+df <- as.ts(manbid)
+
+test_mod2 <- dynlm(mean_daily_dbh ~ L(date) + L(tot_rain_mm) +
+                   L(avg_temp_c) + L(avg_ppfd_mmol_m2),
+                   data = df)
+summary(test_mod2)
+```
+
