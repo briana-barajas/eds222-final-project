@@ -64,9 +64,9 @@ Droughts have been proven to adversely affect forest health. Minimal and inconsi
 
 Conduct various linear regressions to mathematically summarize tropical forest growth under drought conditions, and examine if tree species belonging to families with widespread distributions exhibit lower drought vulnerability.
 
-![](images/family-distribution.png){fig-align="center" width="393"}
+[![Distribution data from Global Biodiversity Information Facility (GBIF)](images/family-distribution.png){fig-align="center"}](https://www.gbif.org/)
 
-Since species distributions for tree species in this study are not readily available, I will be comparing species from lineages with wide versus narrow distributions. Distribution estimates were based off of reports from the [Global Biodiversity Information Facility (GBIF)](https://www.gbif.org/).
+Since species distributions for tree species in this study are not readily available, I will be comparing species from lineages with wide versus narrow distributions.
 
 ## Data
 
