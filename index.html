@@ -8,6 +8,7 @@
 
 <meta name="author" content="Briana Barajas">
 <meta name="dcterms.date" content="2023-12-10">
+<meta name="description" content="Comparison of linear models, summarizing tropical tree growth under drought conditions">
 
 <title>Drought Tolerance in Tropical Tree Species</title>
 <style>
@@ -70,6 +71,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="index_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 </head>
 
@@ -82,19 +85,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Drought Tolerance in Tropical Tree Species</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">MEDS</div>
+    <div class="quarto-category">R</div>
+    <div class="quarto-category">Statistics</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Comparison of linear models, summarizing tropical tree growth under drought conditions
+  </div>
 </div>
 
-
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://briana-barajas.github.io/">Briana Barajas</a> </p>
+  </div>
+    <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://bren.ucsb.edu/masters-programs/master-environmental-data-science">
+            MEDS
+            </a>
+          </p>
+      </div>
+    </div>
 
 <div class="quarto-title-meta">
 
-    <div>
-    <div class="quarto-title-meta-heading">Author</div>
-    <div class="quarto-title-meta-contents">
-             <p>Briana Barajas </p>
-          </div>
-  </div>
-    
+      
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
@@ -108,8 +130,82 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
+<section id="motivation" class="level2">
+<h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
+<p>Climate change, in conjunction with other environmental stressors, continue to threaten forests around the world. Mass tree deaths, fires, and deforestation can create a negative feedback loop, turning these well-recognized carbon sinks into a source. Forests are also recognized for their role in preventing erosion, filtering air pollution, and providing habitat and recreation for people and wildlife alike.</p>
+<p>Droughts have been proven to adversely affect forest health. Minimal and inconsistent water supply affects phenology and increases the chance of insect outbreaks or wildfires<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. While the severity of these threats is not novel to me, I recognized that most of my knowledge on the topic at hand was based on studies conducted in temperate forests. I was curious to learn more about how forests impacted tropical species, which I presume would be far less adapted to severe weather fluctuations.</p>
+</section>
+<section id="goal" class="level2">
+<h2 class="anchored" data-anchor-id="goal">Goal</h2>
+<p>Conduct various linear regressions to mathematically summarize tropical forest growth under drought conditions, and examine if tree species belonging to families with widespread distributions exhibit lower drought vulnerability.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/family-distribution.png" class="img-fluid figure-img" width="393"></p>
+</figure>
+</div>
+<p>Since species distributions for tree species in this study are not readily available, I will be comparing species from lineages with wide versus narrow distributions. Distribution estimates were based off of reports from the <a href="https://www.gbif.org/">Global Biodiversity Information Facility (GBIF)</a>.</p>
+</section>
+<section id="data" class="level2">
+<h2 class="anchored" data-anchor-id="data">Data</h2>
+<section id="about-the-data" class="level4">
+<h4 class="anchored" data-anchor-id="about-the-data">About the Data</h4>
+<p>Data on tree diameter changes were available through the DataONE interface. This dataset includes measures of tree diameter at breast height (dbh) for several tropical tree species in the Luquillo National Research Forest in Puerto Rico. I chose this data since the Luquillo Forest is part of the Long-Term Ecological Research Network, and meteorological data in this area was well recorded. Additionally, these diameter measurements were taken during a notable drought, lasting from 2013-2016.&nbsp;</p>
+<p>To avoid model overfitting, I only wanted to include climate variables that both represent drought conditions and have a potentially larger impact on tree growth. I used mean average temperature and total rainfall to relate tree growth and drought. I also decided to include photosynthetic photon flux density (ppfd), since it directly relates to plants. PPFD is a measure of the number of photons between the 400 and 700nm wavelengths that are hitting surfaces per unit time. These wavelengths are optimal for plant molecules to absorb<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+</section>
+<section id="tree-species" class="level4">
+<h4 class="anchored" data-anchor-id="tree-species">Tree Species</h4>
+<p>To improve predictive capabilities, I selected the four most sampled species that fell within one of two categories for familial distribution. Species and family information was pulled from the metadata, but I will summarize it here:</p>
+<table class="table">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 31%">
+<col style="width: 20%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Abbreviation</th>
+<th style="text-align: center;">Species</th>
+<th style="text-align: center;">Family</th>
+<th style="text-align: center;">Family Distribution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">DACEXC</td>
+<td style="text-align: center;"><em>Dacryodes excelsa</em></td>
+<td style="text-align: center;"><em>Burseraceae</em></td>
+<td style="text-align: center;">narrow</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">MANBID</td>
+<td style="text-align: center;"><em>Manilkara bidentata</em></td>
+<td style="text-align: center;"><em>Sapotaceae</em></td>
+<td style="text-align: center;">narrow</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">CASARB</td>
+<td style="text-align: center;"><em>Casearia arborea</em></td>
+<td style="text-align: center;"><em>Salicaceae</em></td>
+<td style="text-align: center;">wide</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">INGLAU</td>
+<td style="text-align: center;"><em>Inga laurina</em></td>
+<td style="text-align: center;"><em>Fabaceae</em></td>
+<td style="text-align: center;">wide</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="data-cleaning" class="level4">
+<h4 class="anchored" data-anchor-id="data-cleaning">Data Cleaning</h4>
+<p>Although data collection for tree diameters began in 2011, measurements were not consistently taken until June 2014. In order to create time series models without significant data gaps, I restricted the data from June 2014 to July 2016, when diameter data was collected monthly.</p>
+<p>Climate data that was collected daily had far more missing values than data collected hourly, so I used hourly climate data to calculate daily and monthly averages.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## ======== Convert Hourly Data to lower Res =====</span></span>
+<details>
+<summary>View Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## ======== Convert Hourly Data to Lower Res =====</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># convert hourly climate to daily averages</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>daily_conditions <span class="ot">&lt;-</span> hourly_conditions <span class="sc">%&gt;%</span> </span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(<span class="at">date =</span> <span class="fu">date</span>(datetime)) <span class="sc">%&gt;%</span> </span>
@@ -133,19 +229,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># remove raw data variables</span></span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(clim_1999_2014, clim_2015_2023, dbh_raw, hourly_conditions)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell">
+<details>
+<summary>View Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create fully joined df</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>clim_dbh_full <span class="ot">&lt;-</span> <span class="fu">left_join</span>(dbh, daily_conditions, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">'date'</span>,<span class="st">'year_mo'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
-<section id="motivation" class="level2">
-<h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
-<p>Enter background here…</p>
-<p>[add map]</p>
-<p>When seasonality is removed via decomposition, trends in rainfall and temperature demonstrate signs of drought. ::: panel-tabset</p>
-<section id="rainfall-decomposition" class="level4">
-<h4 class="anchored" data-anchor-id="rainfall-decomposition">Rainfall Decomposition</h4>
+</section>
+<section id="exploration---climate-trends" class="level4">
+<h4 class="anchored" data-anchor-id="exploration---climate-trends">Exploration - Climate Trends</h4>
+<p>The following plots show time series decomposition from June 2014 to July 2016 for average monthly temperature and total monthly rainfall. Although the seasonality component contributes more to the overall shape of the line, the decomposed trends still demonstrate signs of drought (increasing temperature and decreasing rainfall).</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Rainfall Decomposition</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Temperature Decomposition</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="cell">
+<details>
+<summary>View Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># decompose monthly rain variable</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>rain_dcmp <span class="ot">&lt;-</span> monthly_conditions <span class="sc">%&gt;%</span> </span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> year_mo) <span class="sc">%&gt;%</span></span>
@@ -153,14 +256,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># plot </span></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span>(rain_dcmp) <span class="sc">%&gt;%</span> <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-</section>
-<section id="temperature-decomposition" class="level4">
-<h4 class="anchored" data-anchor-id="temperature-decomposition">Temperature Decomposition</h4>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <div class="cell">
+<details>
+<summary>View Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># decompose monthly average temperature</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>temp_dcmp <span class="ot">&lt;-</span> monthly_conditions <span class="sc">%&gt;%</span> </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> year_mo) <span class="sc">%&gt;%</span> </span>
@@ -168,17 +273,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># plot components</span></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span>(temp_dcmp) <span class="sc">%&gt;%</span> <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>:::</p>
+</div>
+</div>
+</div>
 </section>
-</section>
-<section id="data" class="level2">
-<h2 class="anchored" data-anchor-id="data">Data</h2>
-<p>About the data &amp; Luquillo research forest</p>
+<section id="exploration---diameter-trends" class="level4">
+<h4 class="anchored" data-anchor-id="exploration---diameter-trends">Exploration - Diameter Trends</h4>
+<p>Diameter trends for all species selected appear linear, so testing linear regression fit is within reason.</p>
 <div class="cell">
+<details>
+<summary>View Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> dbh, <span class="fu">aes</span>(<span class="at">x=</span>date, <span class="at">y=</span> mean_daily_dbh, <span class="at">col =</span> distribution)) <span class="sc">+</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">'#B40052'</span>, <span class="st">'#37947D'</span>))<span class="sc">+</span></span>
@@ -189,17 +298,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>)) <span class="sc">+</span></span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>species)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
+</section>
 <section id="analysis---static-time-series" class="level2">
 <h2 class="anchored" data-anchor-id="analysis---static-time-series">Analysis - Static Time Series</h2>
 <section id="simple-linear-regression" class="level3">
 <h3 class="anchored" data-anchor-id="simple-linear-regression">Simple linear regression</h3>
-<p>A simple linear regression time series looking at tree diameter over time for four species.</p>
+<p>A simple linear regression time series looking at tree diameter (y) over time (x) for four species. This can be written out mathematically as:<span class="math display">\[ \hat{y} = \beta_0 + \beta_1 x_1  \]</span></p>
+<p>Where <span class="math inline">\(\beta_1\)</span> is the average change in dbh given a one unit change in time (<span class="math inline">\(x_1\)</span>), and <span class="math inline">\(\beta_0\)</span> is the estimated diameter when time (<span class="math inline">\(x_1\)</span>) is zero.</p>
 <div class="cell">
+<details>
+<summary>View Code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create subsets for each individual species</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dacexc <span class="ot">&lt;-</span> clim_dbh_full <span class="sc">%&gt;%</span> <span class="fu">filter</span>(species <span class="sc">==</span> <span class="st">'DACEXC'</span>) <span class="sc">%&gt;%</span> </span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> date)</span>
@@ -221,6 +335,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">'Wide Distribution'</span>,</span>
 <span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'I. laurina'</span>, <span class="st">'C. arborea'</span>),</span>
 <span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <table data-quarto-postprocess="true" class="table table-sm table-striped small">
 <caption>Wide Distribution</caption>
@@ -272,11 +387,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 </div>
+<details>
+<summary>View Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (narrow distribution)</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(dacexc_model, manbid_model,</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"Narrow Distribution"</span>,</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'D. excelsa'</span>, <span class="st">'M. bidentata'</span>),</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <table data-quarto-postprocess="true" class="table table-sm table-striped small">
 <caption>Narrow Distribution</caption>
@@ -332,8 +450,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="multiple-linear-regression" class="level3">
 <h3 class="anchored" data-anchor-id="multiple-linear-regression">Multiple Linear Regression</h3>
-<p>Regression using diameter over time, and all climate variables to see if they improve models predictive capability.</p>
+<p>This regression compares diameter over time, adding all climate variables as predictors to see if the models predictive capability improves. This can be written out mathematically as:<span class="math display">\[ \hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 x_3 + \beta_4 x_4\]</span></p>
+<p>Where <span class="math inline">\(x_2\)</span> through <span class="math inline">\(x_4\)</span> are the added climate variables.</p>
 <div class="cell">
+<details>
+<summary>View Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run models w/climate variables</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>dacexc_model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> dacexc)</span>
@@ -350,6 +471,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">'Wide Distribution'</span>,</span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'I. laurina'</span>, <span class="st">'C. arborea'</span>),</span>
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <table data-quarto-postprocess="true" class="table table-sm table-striped small">
 <caption>Wide Distribution</caption>
@@ -428,11 +550,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 </div>
+<details>
+<summary>View Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (narrow distribution)</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(dacexc_model2, manbid_model2,</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"Narrow Distribution"</span>,</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'D. excelsa'</span>, <span class="st">'M. bidentata'</span>),</span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <table data-quarto-postprocess="true" class="table table-sm table-striped small">
 <caption>Narrow Distribution</caption>
@@ -516,41 +641,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="analysis---dynamic-time-series" class="level2">
 <h2 class="anchored" data-anchor-id="analysis---dynamic-time-series">Analysis - Dynamic Time Series</h2>
-<p>Introducing lag into tree growth</p>
+<p>Climate impacts on tree growth are likely not immediate, in order to produce a more accurate model it would be best to add a lag to tree growth. Ideally, this regression would test if current diameter at breast height is dependent on past diameter <em>and</em> past climate variables.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># conduct dynamic regression</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>dacexc_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> <span class="fu">lag</span>(tot_rain_mm, <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">lag</span>(avg_temp_c, <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">lag</span>(avg_ppfd_mmol_m2, <span class="dv">1</span>), <span class="at">data =</span> dacexc)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>manbid_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> <span class="fu">lag</span>(tot_rain_mm, <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">lag</span>(avg_temp_c, <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">lag</span>(avg_ppfd_mmol_m2, <span class="dv">1</span>), <span class="at">data =</span> manbid)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>inglau_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> <span class="fu">lag</span>(tot_rain_mm, <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">lag</span>(avg_temp_c, <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">lag</span>(avg_ppfd_mmol_m2, <span class="dv">1</span>), <span class="at">data =</span> inglau)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>casarb_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> <span class="fu">lag</span>(tot_rain_mm, <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">lag</span>(avg_temp_c, <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">lag</span>(avg_ppfd_mmol_m2, <span class="dv">1</span>), <span class="at">data =</span> casarb)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (wide distribution)</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(inglau_model3, casarb_model3,</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">'Wide Distribution'</span>,</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'I. laurina'</span>, <span class="st">'C. arborea'</span>),</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (narrow distribution)</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(dacexc_model3, manbid_model3,</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"Narrow Distribution"</span>,</span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'D. excelsa'</span>, <span class="st">'M. bidentata'</span>),</span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details>
+<summary>View Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># conduct dynamic regression for a single species</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>dacexc_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> tot_rain_mm <span class="sc">+</span> <span class="fu">lag</span>(tot_rain_mm, <span class="dv">1</span>) <span class="sc">+</span> avg_temp_c <span class="sc">+</span> <span class="fu">lag</span>(avg_temp_c, <span class="dv">1</span>) <span class="sc">+</span> avg_ppfd_mmol_m2 <span class="sc">+</span> <span class="fu">lag</span>(avg_ppfd_mmol_m2, <span class="dv">1</span>), <span class="at">data =</span> dacexc)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>manbid_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> <span class="fu">lag</span>(tot_rain_mm, <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">lag</span>(avg_temp_c, <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">lag</span>(avg_ppfd_mmol_m2, <span class="dv">1</span>), <span class="at">data =</span> manbid)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>inglau_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> <span class="fu">lag</span>(tot_rain_mm, <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">lag</span>(avg_temp_c, <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">lag</span>(avg_ppfd_mmol_m2, <span class="dv">1</span>), <span class="at">data =</span> inglau)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>casarb_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> <span class="fu">lag</span>(tot_rain_mm, <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">lag</span>(avg_temp_c, <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">lag</span>(avg_ppfd_mmol_m2, <span class="dv">1</span>), <span class="at">data =</span> casarb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>I did not run these models, as I realized they were producing very high adjusted r-squared values, between 0.96-1. Oftentimes inflated adjusted r-sqaured values are caused by autocorrelation, which violates one of the assumptions that must be met to run a dynamic linear model. The autocorrelation between previous and current diameter breast height was very high, and can be seen by creating an ACF plot:</p>
+<div class="cell">
+<details>
+<summary>View Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(casarb<span class="sc">$</span>mean_daily_dbh, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for CASARB Diameter'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+</div>
 </div>
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">Results</h2>
-<p>Add plots with short descriptions</p>
+<p>After running several regressions, I found that increasing complexity rarely improved the model. In fact, the simple static time series for <em>C. arborea</em> (CASARB) was one of the most accurate, with a model that explained 70% of variation in diameter growth (y). CASARB has the largest increase in mean diameter height between the first and last measurement, and I believe this is what produced such a well-fitting model. Given more time, I predict that time alone would be a much better indicator of diameter growth than what is demonstrated here. All species except <em>M. bidentata</em> (MANBID) experienced decreases in adjusted r-squared values when climate variables were added. This suggests climate variables were likely excessive and caused overfitting, but the one exception is interesting. By adding climate variables, the new MANBID model explained 30% of variation in diameter, as opposed to 12% in the initial model. While this percentage is still rather low, it suggests potential discrepancies between which tree species are more rapidly impacted by climate.</p>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
-<p>Data limitations, time, missing values, etc.</p>
+<p>Given more time, I would have analyzed the change in diameter at breast height between measurements instead of dbh itself. This could potentially reduce autocorrelation, so a dynamic time series could be run instead. Alternatively, an auto regressive moving average (or ARIMA) model would allow me to compare these changes regardless of the high autocorrelation. As mentioned, I suspect that data collected over a longer period of time would demonstrate a stronger linear relationship between tree diameter and time. To expand this analysis, growth rates during periods of drought could be compared to rates during favorable climate conditions.</p>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>Much more work needs to be done to properly assess the impact that climate change has on tropical rain forests, and how these impacts may different from temperature forests. Data on trees physiological responses can be much harder to collect, leaving gaps in historic records. Similarly, distribution data can be hard to difficult consolidate. Still, improvements in technology, climate science, and environmental empathy continue to lead us in the right direction.</p>
 </section>
 
-</main>
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p><em>Effects of Drought on Forests and Rangelands | Climate Change Resource Center</em>. <a href="https://www.fs.usda.gov/ccrc/topics/effects-drought-forests-and-rangelands" class="uri">https://www.fs.usda.gov/ccrc/topics/effects-drought-forests-and-rangelands</a>. Accessed 10 Dec.&nbsp;2023.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Rabinowitz, Harold, and Suzanne Vogel, editors. “Chapter 11 - Style and Usage in Earth Science and Environmental Science.” <em>The Manual of Scientific Style</em>, Academic Press, 2009, pp.&nbsp;427–68. <em>ScienceDirect</em>, <a href="https://doi.org/10.1016/B978-012373980-3.50015-0" class="uri">https://doi.org/10.1016/B978-012373980-3.50015-0</a>.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section><section class="quarto-appendix-contents"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{barajas2023,
+  author = {Barajas, Briana},
+  title = {Drought {Tolerance} in {Tropical} {Tree} {Species}},
+  date = {2023-12-10},
+  url = {https://github.com/briana-barajas/luquillo-tree-growth},
+  langid = {en}
+}
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-barajas2023" class="csl-entry quarto-appendix-citeas" role="listitem">
+Barajas, Briana. 2023. <span>“Drought Tolerance in Tropical Tree
+Species.”</span> December 10, 2023. <a href="https://github.com/briana-barajas/luquillo-tree-growth">https://github.com/briana-barajas/luquillo-tree-growth</a>.
+</div></div></section></div></main>
 <!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {

@@ -108,15 +108,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(zoo)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># plotting/aesthetics</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sjPlot)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># time series packages</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(feasts)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tsibble)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dynlm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># plotting/aesthetics</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sjPlot)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># time series packages</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(feasts)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tsibble)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dynlm)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(zoo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Read in Data</p>
@@ -154,19 +154,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">date</span>(date) <span class="sc">&gt;=</span> <span class="st">"2014-06-01"</span> <span class="sc">&amp;</span></span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>           <span class="fu">date</span>(date) <span class="sc">&lt;</span> <span class="st">"2016-08-01"</span>)</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># add family distribution data</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>dbh <span class="ot">&lt;-</span> dbh <span class="sc">%&gt;%</span> </span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">family =</span> <span class="fu">case_when</span>(species <span class="sc">==</span> <span class="st">'CASARB'</span> <span class="sc">~</span> <span class="st">'Salicaceae'</span>,</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>                            species <span class="sc">==</span> <span class="st">'MANBID'</span> <span class="sc">~</span> <span class="st">'Sapotaceae'</span>,</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                            species <span class="sc">==</span> <span class="st">'DACEXC'</span> <span class="sc">~</span> <span class="st">'Burseraceae'</span>,</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                            species <span class="sc">==</span> <span class="st">'INGLAU'</span> <span class="sc">~</span> <span class="st">'Fabaceae'</span>),</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>         <span class="at">distribution =</span> <span class="fu">case_when</span>(family <span class="sc">==</span> <span class="st">'Salicaceae'</span> <span class="sc">~</span> <span class="st">'wide'</span>,</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>                                  family <span class="sc">==</span> <span class="st">'Sapotaceae'</span> <span class="sc">~</span> <span class="st">'narrow'</span>,</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>                                  family <span class="sc">==</span> <span class="st">'Burseraceae'</span> <span class="sc">~</span> <span class="st">'narrow'</span>,</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>                                  family <span class="sc">==</span> <span class="st">'Fabaceae'</span> <span class="sc">~</span> <span class="st">'wide'</span>),</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>         <span class="at">distribution =</span> <span class="fu">as.factor</span>(distribution))</span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(dbh))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co"># add family distribution data</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>dbh <span class="ot">&lt;-</span> dbh <span class="sc">%&gt;%</span> </span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">family =</span> <span class="fu">case_when</span>(species <span class="sc">==</span> <span class="st">'CASARB'</span> <span class="sc">~</span> <span class="st">'Salicaceae'</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                            species <span class="sc">==</span> <span class="st">'MANBID'</span> <span class="sc">~</span> <span class="st">'Sapotaceae'</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                            species <span class="sc">==</span> <span class="st">'DACEXC'</span> <span class="sc">~</span> <span class="st">'Burseraceae'</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>                            species <span class="sc">==</span> <span class="st">'INGLAU'</span> <span class="sc">~</span> <span class="st">'Fabaceae'</span>),</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>         <span class="at">distribution =</span> <span class="fu">case_when</span>(family <span class="sc">==</span> <span class="st">'Salicaceae'</span> <span class="sc">~</span> <span class="st">'wide'</span>,</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>                                  family <span class="sc">==</span> <span class="st">'Sapotaceae'</span> <span class="sc">~</span> <span class="st">'narrow'</span>,</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>                                  family <span class="sc">==</span> <span class="st">'Burseraceae'</span> <span class="sc">~</span> <span class="st">'narrow'</span>,</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>                                  family <span class="sc">==</span> <span class="st">'Fabaceae'</span> <span class="sc">~</span> <span class="st">'wide'</span>),</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>         <span class="at">distribution =</span> <span class="fu">as.factor</span>(distribution))</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(dbh))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>           tag        species             gx             gy       transect 
@@ -269,7 +270,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>species) <span class="sc">+</span> <span class="fu">geom_smooth</span>(<span class="at">color=</span><span class="st">'black'</span>) <span class="sc">+</span> <span class="fu">theme_classic</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p><strong>Mean diameter over time:</strong></p>
@@ -289,7 +290,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>species)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
@@ -311,7 +312,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Total Rain (mm)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </div>
@@ -326,7 +327,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Average Temperature (°C)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </div>
@@ -341,7 +342,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Photosynthetic Photon Flux Density (mmol/m2)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </div>
@@ -388,7 +389,7 @@ $`2016`
 <span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span>(rain_dcmp) <span class="sc">%&gt;%</span> <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p><strong>Temperature decomposition</strong>:</p>
@@ -404,7 +405,7 @@ $`2016`
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span>(temp_dcmp) <span class="sc">%&gt;%</span> <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+<p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p><strong>Photosynthetic Flux Density Decomposition:</strong> I likely won’t include this decomposition. While photosynthetic flux density may be relavent to tree growth, it seems to be unrelated to the drought. I’ll include ppfd as an additional variable in the multiple linear regression, but I won’t explain the decomposition.</p>
@@ -583,25 +584,6 @@ $`2016`
 </section>
 <section id="multiple-linear-regression" class="level3">
 <h3 class="anchored" data-anchor-id="multiple-linear-regression">Multiple Linear Regression</h3>
-<section id="parallel-slopes" class="level4">
-<h4 class="anchored" data-anchor-id="parallel-slopes">Parallel Slopes</h4>
-<p>The type of distribution (wide or narrow) can be added to the regression as a categorical variable. In this model, the hypothesis is that species in the wide distribution category will have faster growth (larger positive <span class="math inline">\(\beta_1\)</span> ) than species with a narrow distribution. Mathematically, this model is looking for the following: <span class="math display">\[ \hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2 \]</span></p>
-<p>Where <span class="math inline">\(x_1\)</span> is the categorical variable (distribution) and <span class="math inline">\(x_2\)</span> is the continuous variable (time).</p>
-<div class="cell">
-<details>
-<summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># group species by their distribution</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>dist_grouped <span class="ot">&lt;-</span> dbh <span class="sc">%&gt;%</span> </span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(distribution, date) <span class="sc">%&gt;%</span> </span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean_daily_dbh =</span> <span class="fu">mean</span>(dbh_mm, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># try plotting</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> dist_grouped, <span class="fu">aes</span>(<span class="at">x=</span>date, <span class="at">y =</span> mean_daily_dbh), <span class="at">fill =</span> distribution) <span class="sc">+</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<p>I realized I don’t know how to run this in R so I’m skipping for now.</p>
-</section>
 <section id="adding-climate" class="level4">
 <h4 class="anchored" data-anchor-id="adding-climate">Adding Climate</h4>
 <p>The key question in this study is asking how drought affects growth rate. While time is a good starting indicator since we know the drought lasted 2013-2016, and trees do grow over time, it is not an appropriate estimate of climate. Since optimal daily conditions will likely have a lagged response in growth, I’m trying to run a <em>dynamic time series</em>.</p>
@@ -609,37 +591,37 @@ $`2016`
 <div class="cell">
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># wide distribution</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(casarb<span class="sc">$</span>mean_daily_dbh, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for CASARB Diameter'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># wide distribution</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(casarb<span class="sc">$</span>mean_daily_dbh, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for CASARB Diameter'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid" width="672"></p>
 </div>
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(inglau<span class="sc">$</span>mean_daily_dbh, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for INGLAU Diameter'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(inglau<span class="sc">$</span>mean_daily_dbh, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for INGLAU Diameter'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-21-2.png" class="img-fluid" width="672"></p>
 </div>
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># narrow distribution </span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(dacexc<span class="sc">$</span>mean_daily_dbh, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for DACEXC Diameter'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># narrow distribution </span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(dacexc<span class="sc">$</span>mean_daily_dbh, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for DACEXC Diameter'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-21-3.png" class="img-fluid" width="672"></p>
 </div>
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(manbid<span class="sc">$</span>mean_daily_dbh, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for MANBID Diameter'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(manbid<span class="sc">$</span>mean_daily_dbh, <span class="at">lag.max =</span> <span class="dv">12</span>, <span class="at">na.action =</span> na.pass,  <span class="at">main =</span> <span class="st">'Autocorrelation for MANBID Diameter'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <p><img src="tree-blog-draft_files/figure-html/unnamed-chunk-21-4.png" class="img-fluid" width="672"></p>
 </div>
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># as expected, diameters high high autocorrelation</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># as expected, diameters high high autocorrelation</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -649,22 +631,22 @@ $`2016`
 <div class="cell">
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run models w/climate variables</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>dacexc_model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> dacexc)</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>manbid_model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> manbid)</span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>inglau_model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> inglau)</span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>casarb_model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> casarb)</span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (wide distribution)</span></span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(inglau_model2, casarb_model2,</span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">'Wide Distribution'</span>,</span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'I. laurina'</span>, <span class="st">'C. arborea'</span>),</span>
-<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run models w/climate variables</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>dacexc_model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> dacexc)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>manbid_model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> manbid)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>inglau_model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> inglau)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>casarb_model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> casarb)</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (wide distribution)</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(inglau_model2, casarb_model2,</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">'Wide Distribution'</span>,</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'I. laurina'</span>, <span class="st">'C. arborea'</span>),</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <table data-quarto-postprocess="true" class="table table-sm table-striped small">
@@ -746,11 +728,11 @@ $`2016`
 </div>
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (narrow distribution)</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(dacexc_model2, manbid_model2,</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"Narrow Distribution"</span>,</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'D. excelsa'</span>, <span class="st">'M. bidentata'</span>),</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (narrow distribution)</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(dacexc_model2, manbid_model2,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"Narrow Distribution"</span>,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'D. excelsa'</span>, <span class="st">'M. bidentata'</span>),</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <table data-quarto-postprocess="true" class="table table-sm table-striped small">
@@ -838,70 +820,25 @@ $`2016`
 <div class="cell">
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>dacexc_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> <span class="fu">L</span>(tot_rain_mm) <span class="sc">+</span> </span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> dacexc)</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>manbid_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> manbid)</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>inglau_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> inglau)</span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>casarb_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> casarb)</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (wide distribution)</span></span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(inglau_model3, casarb_model3,</span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">'Wide Distribution'</span>,</span>
-<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'I. laurina'</span>, <span class="st">'C. arborea'</span>),</span>
-<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span>
-<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a><span class="co"># view results (narrow distribution)</span></span>
-<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(dacexc_model3, manbid_model3,</span>
-<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"Narrow Distribution"</span>,</span>
-<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">dv.labels =</span> <span class="fu">c</span>(<span class="st">'D. excelsa'</span>, <span class="st">'M. bidentata'</span>),</span>
-<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> dacexc <span class="sc">%&gt;%</span> </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(date) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean_daily_dbh =</span> <span class="fu">mean</span>(dbh_mm)) </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">left_join</span>(test, daily_conditions, <span class="at">by =</span> <span class="st">'date'</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index=</span>date)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> full <span class="sc">%&gt;%</span> <span class="fu">filter</span>(species <span class="sc">==</span> <span class="st">'MANBID'</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(date) <span class="sc">%&gt;%</span> </span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean_daily_dbh =</span> <span class="fu">mean</span>(dbh_mm, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">tot_rain_mm =</span> <span class="fu">sum</span>(tot_rain_mm, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">avg_temp_c =</span> <span class="fu">mean</span>(avg_temp_c, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">avg_ppfd_mmol_m2 =</span> <span class="fu">mean</span>(avg_ppfd_mmol_m2, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> date)</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="co"># replace zeros w/NA, no data collected October 2014</span></span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>test[<span class="st">'tot_rain_mm'</span>][test[<span class="st">'tot_rain_mm'</span>] <span class="sc">==</span> <span class="dv">0</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>test[<span class="st">'avg_temp_c'</span>][test[<span class="st">'avg_temp_c'</span>] <span class="sc">==</span> <span class="st">'NaN'</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
-<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>test[<span class="st">'avg_ppfd_mmol_m2'</span>][test[<span class="st">'avg_ppfd_mmol_m2'</span>] <span class="sc">==</span> <span class="st">'NaN'</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
-<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="co"># replace NAs with the mean of previous and next month</span></span>
-<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>test<span class="sc">$</span>avg_temp_c <span class="ot">&lt;-</span> <span class="fu">na.approx</span>(test<span class="sc">$</span>avg_temp_c)</span>
-<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>test<span class="sc">$</span>avg_ppfd_mmol_m2 <span class="ot">&lt;-</span> <span class="fu">na.approx</span>(test<span class="sc">$</span>avg_ppfd_mmol_m2)</span>
-<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>test<span class="sc">$</span>tot_rain_mm <span class="ot">&lt;-</span> <span class="fu">na.approx</span>(test<span class="sc">$</span>tot_rain_mm, <span class="at">maxgap =</span> <span class="cn">Inf</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>dacexc_model3 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> <span class="fu">lag</span>(mean_daily_dbh, <span class="dv">1</span>) <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
 <details>
 <summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>test_mod <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> date <span class="sc">+</span> tot_rain_mm <span class="sc">+</span> </span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>                      avg_temp_c <span class="sc">+</span> avg_ppfd_mmol_m2, <span class="at">data =</span> test)</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(test_mod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<div class="cell">
-<details>
-<summary>View Code</summary>
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">as.ts</span>(manbid)</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>test_mod2 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(mean_daily_dbh <span class="sc">~</span> <span class="fu">L</span>(date) <span class="sc">+</span> <span class="fu">L</span>(tot_rain_mm) <span class="sc">+</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>                   <span class="fu">L</span>(avg_temp_c) <span class="sc">+</span> <span class="fu">L</span>(avg_ppfd_mmol_m2),</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data =</span> df)</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(test_mod2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(dacexc_model3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>

@@ -1,15 +1,30 @@
 ---
 title: 'Drought Tolerance in Tropical Tree Species'
-author: 'Briana Barajas'
+description: 'Comparison of linear models, summarizing tropical tree growth under drought conditions'
+author: 
+  - name: 'Briana Barajas'
+    url: https://briana-barajas.github.io/
+    affiliation: MEDS
+    affiliation-url: https://bren.ucsb.edu/masters-programs/master-environmental-data-science
 date: 'Dec 10, 2023'
+categories: [MEDS, R, Statistics]
+citation:
+  url: https://github.com/briana-barajas/luquillo-tree-growth
+image: luq-1.jpg
+draft: false
+footnotes-hover: true
 output: html_document
+format: 
+  html:
+    code-fold: true
+    code-summary: "View Code"
 ---
 
 ```{r, include=FALSE}
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
-```{r, include=FALSE}
+```{r,results='hide', echo=FALSE}
 ## ========== Load Libraries ==========
 # data processing
 library(tidyverse)
@@ -27,7 +42,7 @@ library(dynlm)
 library(zoo)
 ```
 
-```{r, include=FALSE}
+```{r, include=FALSE, results='hide', echo=FALSE}
 ## ========== Read in Data ==========
 # tree data on diameter breast height
 dbh_raw <- read_csv(here('data/long.data.DBH.csv'))
@@ -36,6 +51,47 @@ dbh_raw <- read_csv(here('data/long.data.DBH.csv'))
 clim_1999_2014 <- read_csv(here("data/NADPTowerHourlyData1999_2014.csv")) %>% clean_names()
 clim_2015_2023 <- read_csv(here('data/NADPTowerHourlyData2015_2023v2.csv')) %>% clean_names()
 ```
+
+## Motivation
+
+Climate change, in conjunction with other environmental stressors, continue to threaten forests around the world. Mass tree deaths, fires, and deforestation can create a negative feedback loop, turning these well-recognized carbon sinks into a source. Forests are also recognized for their role in preventing erosion, filtering air pollution, and providing habitat and recreation for people and wildlife alike.
+
+Droughts have been proven to adversely affect forest health. Minimal and inconsistent water supply affects phenology and increases the chance of insect outbreaks or wildfires[^1]. While the severity of these threats is not novel to me, I recognized that most of my knowledge on the topic at hand was based on studies conducted in temperate forests. I was curious to learn more about how forests impacted tropical species, which I presume would be far less adapted to severe weather fluctuations.
+
+[^1]: *Effects of Drought on Forests and Rangelands \| Climate Change Resource Center*. <https://www.fs.usda.gov/ccrc/topics/effects-drought-forests-and-rangelands>. Accessed 10 Dec. 2023.
+
+## Goal
+
+Conduct various linear regressions to mathematically summarize tropical forest growth under drought conditions, and examine if tree species belonging to families with widespread distributions exhibit lower drought vulnerability.
+
+![](images/family-distribution.png){fig-align="center" width="393"}
+
+Since species distributions for tree species in this study are not readily available, I will be comparing species from lineages with wide versus narrow distributions. Distribution estimates were based off of reports from the [Global Biodiversity Information Facility (GBIF)](https://www.gbif.org/).
+
+## Data
+
+#### About the Data
+
+Data on tree diameter changes were available through the DataONE interface. This dataset includes measures of tree diameter at breast height (dbh) for several tropical tree species in the Luquillo National Research Forest in Puerto Rico. I chose this data since the Luquillo Forest is part of the Long-Term Ecological Research Network, and meteorological data in this area was well recorded. Additionally, these diameter measurements were taken during a notable drought, lasting from 2013-2016. 
+
+To avoid model overfitting, I only wanted to include climate variables that both represent drought conditions and have a potentially larger impact on tree growth. I used mean average temperature and total rainfall to relate tree growth and drought. I also decided to include photosynthetic photon flux density (ppfd), since it directly relates to plants. PPFD is a measure of the number of photons between the 400 and 700nm wavelengths that are hitting surfaces per unit time. These wavelengths are optimal for plant molecules to absorb[^2].
+
+[^2]: Rabinowitz, Harold, and Suzanne Vogel, editors. "Chapter 11 - Style and Usage in Earth Science and Environmental Science." *The Manual of Scientific Style*, Academic Press, 2009, pp. 427--68. *ScienceDirect*, <https://doi.org/10.1016/B978-012373980-3.50015-0>.
+
+#### Tree Species
+
+To improve predictive capabilities, I selected the four most sampled species that fell within one of two categories for familial distribution. Species and family information was pulled from the metadata, but I will summarize it here:
+
+| Abbreviation |        Species        |    Family     | Family Distribution |
+|:------------:|:---------------------:|:-------------:|:-------------------:|
+|    DACEXC    |  *Dacryodes excelsa*  | *Burseraceae* |       narrow        |
+|    MANBID    | *Manilkara bidentata* | *Sapotaceae*  |       narrow        |
+|    CASARB    |  *Casearia arborea*   | *Salicaceae*  |        wide         |
+|    INGLAU    |    *Inga laurina*     |  *Fabaceae*   |        wide         |
+
+#### Data Cleaning
+
+Although data collection for tree diameters began in 2011, measurements were not consistently taken until June 2014. In order to create time series models without significant data gaps, I restricted the data from June 2014 to July 2016, when diameter data was collected monthly.
 
 ```{r, include=FALSE}
 ## ========== Tidy Tree Data =======
@@ -67,6 +123,8 @@ dbh <- dbh %>%
          distribution = as.factor(distribution))
 ```
 
+Climate data that was collected daily had far more missing values than data collected hourly, so I used hourly climate data to calculate daily and monthly averages.
+
 ```{r, include=FALSE}
 ## ========== Tidy Climate Data =====
 # clean and filter data from 1999-2014
@@ -94,7 +152,7 @@ hourly_conditions <- rbind(clim_1999_2014, clim_2015_2023) %>%
 ```
 
 ```{r}
-## ======== Convert Hourly Data to lower Res =====
+## ======== Convert Hourly Data to Lower Res =====
 # convert hourly climate to daily averages
 daily_conditions <- hourly_conditions %>% 
   group_by(date = date(datetime)) %>% 
@@ -118,7 +176,6 @@ monthly_conditions$tot_rain_mm <- na.approx(monthly_conditions$tot_rain_mm)
 
 # remove raw data variables
 rm(clim_1999_2014, clim_2015_2023, dbh_raw, hourly_conditions)
-
 ```
 
 ```{r}
@@ -126,17 +183,11 @@ rm(clim_1999_2014, clim_2015_2023, dbh_raw, hourly_conditions)
 clim_dbh_full <- left_join(dbh, daily_conditions, by = c('date','year_mo'))
 ```
 
+#### Exploration - Climate Trends
 
+The following plots show time series decomposition from June 2014 to July 2016 for average monthly temperature and total monthly rainfall. Although the seasonality component contributes more to the overall shape of the line, the decomposed trends still demonstrate signs of drought (increasing temperature and decreasing rainfall).
 
-## Motivation
-
-Enter background here...
-
-\[add map\]
-
-When seasonality is removed via decomposition, trends in rainfall and temperature demonstrate signs of drought. 
 ::: panel-tabset
-
 #### Rainfall Decomposition
 
 ```{r}
@@ -150,6 +201,7 @@ components(rain_dcmp) %>% autoplot()
 ```
 
 #### Temperature Decomposition
+
 ```{r}
 # decompose monthly average temperature
 temp_dcmp <- monthly_conditions %>% 
@@ -159,12 +211,11 @@ temp_dcmp <- monthly_conditions %>%
 # plot components
 components(temp_dcmp) %>% autoplot()
 ```
-
 :::
 
-## Data
+#### Exploration - Diameter Trends
 
-About the data & Luquillo research forest
+Diameter trends for all species selected appear linear, so testing linear regression fit is within reason.
 
 ```{r}
 ggplot(data = dbh, aes(x=date, y= mean_daily_dbh, col = distribution)) +
@@ -183,7 +234,10 @@ ggplot(data = dbh, aes(x=date, y= mean_daily_dbh, col = distribution)) +
 
 ### Simple linear regression
 
-A simple linear regression time series looking at tree diameter over time for four species.
+A simple linear regression time series looking at tree diameter (y) over time (x) for four species. This can be written out mathematically as:$$ \hat{y} = \beta_0 + \beta_1 x_1  $$
+
+Where $\beta_1$ is the average change in dbh given a one unit change in time ($x_1$), and $\beta_0$ is the estimated diameter when time ($x_1$) is zero.
+
 ```{r}
 # create subsets for each individual species
 dacexc <- clim_dbh_full %>% filter(species == 'DACEXC') %>% 
@@ -214,10 +268,12 @@ tab_model(dacexc_model, manbid_model,
           digits = 4)
 ```
 
-
 ### Multiple Linear Regression
 
-Regression using diameter over time, and all climate variables to see if they improve models predictive capability.
+This regression compares diameter over time, adding all climate variables as predictors to see if the models predictive capability improves. This can be written out mathematically as:$$ \hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 x_3 + \beta_4 x_4$$
+
+Where $x_2$ through $x_4$ are the added climate variables.
+
 ```{r}
 # run models w/climate variables
 dacexc_model2 <- lm(mean_daily_dbh ~ date + tot_rain_mm + 
@@ -244,38 +300,34 @@ tab_model(dacexc_model2, manbid_model2,
 ```
 
 ## Analysis - Dynamic Time Series
-Introducing lag into tree growth
+
+Climate impacts on tree growth are likely not immediate, in order to produce a more accurate model it would be best to add a lag to tree growth. Ideally, this regression would test if current diameter at breast height is dependent on past diameter *and* past climate variables.
+
 ```{r, eval=FALSE}
-# conduct dynamic regression
-dacexc_model3 <- dynlm(mean_daily_dbh ~ lag(tot_rain_mm, 1) + lag(avg_temp_c, 1) +
-                         lag(avg_ppfd_mmol_m2, 1), data = dacexc)
+# conduct dynamic regression for a single species
+dacexc_model3 <- dynlm(mean_daily_dbh ~ tot_rain_mm + lag(tot_rain_mm, 1) + avg_temp_c + lag(avg_temp_c, 1) + avg_ppfd_mmol_m2 + lag(avg_ppfd_mmol_m2, 1), data = dacexc)
 manbid_model3 <- dynlm(mean_daily_dbh ~ lag(tot_rain_mm, 1) + lag(avg_temp_c, 1) +
                          lag(avg_ppfd_mmol_m2, 1), data = manbid)
 inglau_model3 <- dynlm(mean_daily_dbh ~ lag(tot_rain_mm, 1) + lag(avg_temp_c, 1) +
                          lag(avg_ppfd_mmol_m2, 1), data = inglau)
 casarb_model3 <- dynlm(mean_daily_dbh ~ lag(tot_rain_mm, 1) + lag(avg_temp_c, 1) +
                          lag(avg_ppfd_mmol_m2, 1), data = casarb)
-
-# view results (wide distribution)
-tab_model(inglau_model3, casarb_model3,
-          title = 'Wide Distribution',
-          dv.labels = c('I. laurina', 'C. arborea'),
-          digits = 4)
-
-# view results (narrow distribution)
-tab_model(dacexc_model3, manbid_model3,
-          title = "Narrow Distribution",
-          dv.labels = c('D. excelsa', 'M. bidentata'),
-          digits = 4)
 ```
 
+I did not run these models, as I realized they were producing very high adjusted r-squared values, between 0.96-1. Oftentimes inflated adjusted r-sqaured values are caused by autocorrelation, which violates one of the assumptions that must be met to run a dynamic linear model. The autocorrelation between previous and current diameter breast height was very high, and can be seen by creating an ACF plot:
 
-
+```{r}
+acf(casarb$mean_daily_dbh, lag.max = 12, na.action = na.pass,  main = 'Autocorrelation for CASARB Diameter')
+```
 
 ## Results
 
-Add plots with short descriptions
+After running several regressions, I found that increasing complexity rarely improved the model. In fact, the simple static time series for *C. arborea* (CASARB) was one of the most accurate, with a model that explained 70% of variation in diameter growth (y). CASARB has the largest increase in mean diameter height between the first and last measurement, and I believe this is what produced such a well-fitting model. Given more time, I predict that time alone would be a much better indicator of diameter growth than what is demonstrated here. All species except *M. bidentata* (MANBID) experienced decreases in adjusted r-squared values when climate variables were added. This suggests climate variables were likely excessive and caused overfitting, but the one exception is interesting. By adding climate variables, the new MANBID model explained 30% of variation in diameter, as opposed to 12% in the initial model. While this percentage is still rather low, it suggests potential discrepancies between which tree species are more rapidly impacted by climate.
 
 ## Limitations
 
-Data limitations, time, missing values, etc.
+Given more time, I would have analyzed the change in diameter at breast height between measurements instead of dbh itself. This could potentially reduce autocorrelation, so a dynamic time series could be run instead. Alternatively, an auto regressive moving average (or ARIMA) model would allow me to compare these changes regardless of the high autocorrelation. As mentioned, I suspect that data collected over a longer period of time would demonstrate a stronger linear relationship between tree diameter and time. To expand this analysis, growth rates during periods of drought could be compared to rates during favorable climate conditions.
+
+## Conclusion
+
+Much more work needs to be done to properly assess the impact that climate change has on tropical rain forests, and how these impacts may different from temperature forests. Data on trees physiological responses can be much harder to collect, leaving gaps in historic records. Similarly, distribution data can be hard to difficult consolidate. Still, improvements in technology, climate science, and environmental empathy continue to lead us in the right direction.

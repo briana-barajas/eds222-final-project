@@ -77,10 +77,7 @@ dbh <- dbh %>%
          distribution = case_when(family == 'Salicaceae' ~ 'wide',
                                   family == 'Sapotaceae' ~ 'narrow',
                                   family == 'Burseraceae' ~ 'narrow',
-```
-
-```{r}
-family == 'Fabaceae' ~ 'wide'),
+                                  family == 'Fabaceae' ~ 'wide'),
          distribution = as.factor(distribution))
 
 colSums(is.na(dbh))
@@ -397,29 +394,6 @@ test <- left_join(test, daily_conditions, by = 'date') %>%
 dacexc_model3 <- dynlm(mean_daily_dbh ~ lag(mean_daily_dbh, 1) + tot_rain_mm + 
                       avg_temp_c + avg_ppfd_mmol_m2, data = test)
 
-model <- dynlm(dbh ~ L(dbh, lag = 1) + climate_condition + time, data = your_data)
-
-
-
-manbid_model3 <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
-                      avg_temp_c + avg_ppfd_mmol_m2, data = manbid)
-
-inglau_model3 <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
-                      avg_temp_c + avg_ppfd_mmol_m2, data = inglau)
-casarb_model3 <- dynlm(mean_daily_dbh ~ date + tot_rain_mm + 
-                      avg_temp_c + avg_ppfd_mmol_m2, data = casarb)
-
-# view results (wide distribution)
-tab_model(inglau_model3, casarb_model3,
-          title = 'Wide Distribution',
-          dv.labels = c('I. laurina', 'C. arborea'),
-          digits = 4)
-
-# view results (narrow distribution)
-tab_model(dacexc_model3, manbid_model3,
-          title = "Narrow Distribution",
-          dv.labels = c('D. excelsa', 'M. bidentata'),
-          digits = 4)
 ```
 
 ```{r, eval=FALSE}
